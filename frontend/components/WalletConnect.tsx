@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { useWallet } from "@/context/WalletContext";
 
 function truncate(addr: string) {
@@ -36,8 +37,11 @@ export default function WalletConnect() {
           {truncate(address)}
         </div>
 
-        <button
+        <motion.button
           onClick={disconnect}
+          whileHover={{ borderColor: "#888880", color: "#ebebdf" }}
+          whileTap={{ scale: 0.96 }}
+          transition={{ duration: 0.14 }}
           style={{
             fontSize: 13,
             fontWeight: 600,
@@ -50,15 +54,18 @@ export default function WalletConnect() {
           }}
         >
           Disconnect
-        </button>
+        </motion.button>
       </div>
     );
   }
 
   return (
-    <button
+    <motion.button
       onClick={connect}
       disabled={connecting}
+      whileHover={!connecting ? { scale: 1.04, backgroundColor: "#d4f500" } : {}}
+      whileTap={!connecting ? { scale: 0.96 } : {}}
+      transition={{ duration: 0.14 }}
       style={{
         fontSize: 14,
         fontWeight: 700,
@@ -68,10 +75,9 @@ export default function WalletConnect() {
         backgroundColor: connecting ? "#a8c700" : "#c9ee00",
         color: "#0a0a0a",
         cursor: connecting ? "not-allowed" : "pointer",
-        transition: "background-color 0.15s",
       }}
     >
       {connecting ? "Connecting…" : "Connect Freighter"}
-    </button>
+    </motion.button>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { useModal } from "@/context/ModalContext";
 import type { Bounty } from "@/types/bounty";
 import BountyStatusBadge from "./BountyStatusBadge";
@@ -15,44 +16,61 @@ const STATUS_ACCENT: Record<string, string> = {
   Cancelled: "#444440",
 };
 
+// Subtle tinted backgrounds — each status has its own character
+const STATUS_BG: Record<string, string> = {
+  Open:      "#141414",
+  Funded:    "#0c0c1c",
+  Submitted: "#180e06",
+  Approved:  "#0e1607",
+  Disputed:  "#1e0808",
+  Resolved:  "#18060f",
+  Cancelled: "#101010",
+};
+
 function truncate(addr: string) {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 
-export default function BountyCard({ bounty }: { bounty: Bounty }) {
+export default function BountyCard({ bounty, index = 0 }: { bounty: Bounty; index?: number }) {
   const { openBounty } = useModal();
   const accent = STATUS_ACCENT[bounty.status] ?? "#444440";
+  const bg = STATUS_BG[bounty.status] ?? "#141414";
 
   return (
-    <div
+    <motion.div
       role="button"
       tabIndex={0}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.32, delay: index * 0.06, ease: [0.25, 1, 0.4, 1] }}
+      whileHover={{ y: -4, transition: { duration: 0.18, ease: "easeOut" } }}
+      whileTap={{ scale: 0.98, transition: { duration: 0.1 } }}
       onClick={() => openBounty(bounty.id)}
       onKeyDown={e => { if (e.key === "Enter" || e.key === " ") openBounty(bounty.id); }}
+      onMouseEnter={e => {
+        const el = e.currentTarget as HTMLElement;
+        el.style.boxShadow = `inset 4px 0 0 ${accent}, 0 14px 44px ${accent}22`;
+        el.style.borderColor = "#333330";
+      }}
+      onMouseLeave={e => {
+        const el = e.currentTarget as HTMLElement;
+        el.style.boxShadow = `inset 4px 0 0 ${accent}`;
+        el.style.borderColor = "#222220";
+      }}
       style={{
-        backgroundColor: "#141414",
+        backgroundColor: bg,
+        // subtle diagonal corner glow matching the status color
+        backgroundImage: `linear-gradient(155deg, ${accent}0e 0%, transparent 48%)`,
         borderRadius: 8,
         border: "1px solid #222220",
         padding: "18px 20px",
         cursor: "pointer",
-        transition: "all 0.15s",
         height: "100%",
         boxSizing: "border-box",
         boxShadow: `inset 4px 0 0 ${accent}`,
         outline: "none",
-      }}
-      onMouseEnter={e => {
-        const el = e.currentTarget as HTMLDivElement;
-        el.style.borderColor = "#333330";
-        el.style.transform = "translateY(-2px)";
-        el.style.boxShadow = `inset 4px 0 0 ${accent}, 0 8px 32px rgba(0,0,0,0.5)`;
-      }}
-      onMouseLeave={e => {
-        const el = e.currentTarget as HTMLDivElement;
-        el.style.borderColor = "#222220";
-        el.style.transform = "translateY(0)";
-        el.style.boxShadow = `inset 4px 0 0 ${accent}`;
-      }}
+        transition: "box-shadow 0.2s ease, border-color 0.2s ease",
+      } as React.CSSProperties}
     >
       <div style={{ marginBottom: 12 }}>
         <BountyStatusBadge status={bounty.status} />
@@ -79,6 +97,6 @@ export default function BountyCard({ bounty }: { bounty: Bounty }) {
           </div>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 }

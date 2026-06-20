@@ -171,8 +171,8 @@ export default function DashboardPage() {
         </div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12 }}>
-          {filtered.map((b) => (
-            <BountyCard key={b.id} bounty={b} />
+          {filtered.map((b, i) => (
+            <BountyCard key={b.id} bounty={b} index={i} />
           ))}
         </div>
       )}

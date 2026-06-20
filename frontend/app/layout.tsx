@@ -34,6 +34,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           .desktop-wallet { display: block; }
           .mobile-menu { display: none; }
 
+          .nav-link:hover { color: #ebebdf !important; background-color: #1a1a18 !important; }
+
+          * { box-sizing: border-box; }
+          ::selection { background: #c9ee0033; color: #ebebdf; }
+          :focus-visible { outline: 2px solid #c9ee00; outline-offset: 2px; }
+
           @media (max-width: 640px) {
             .desktop-nav { display: none; }
             .desktop-wallet { display: none; }

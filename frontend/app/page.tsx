@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { motion } from "framer-motion";
 import type { Bounty, BountyStatus } from "@/types/bounty";
 import { getAllBounties } from "@/lib/contract";
 import BountyCard from "@/components/BountyCard";
@@ -61,8 +62,14 @@ export default function BountyBoardPage() {
   }, [bounties, filter, search, sort]);
 
   return (
-    <div style={{ backgroundColor: "#0a0a0a", minHeight: "100%" }}>
-      <div style={{ borderBottom: "1px solid #222220", padding: "28px 24px 0" }}>
+    <div style={{ minHeight: "100%" }}>
+      <div style={{
+        borderBottom: "1px solid #222220",
+        padding: "28px 24px 0",
+        backgroundColor: "rgba(10,10,10,0.78)",
+        backdropFilter: "blur(14px)",
+        WebkitBackdropFilter: "blur(14px)",
+      }}>
         <div style={{ maxWidth: 1152, margin: "0 auto" }}>
 
           {/* Title row */}
@@ -102,8 +109,11 @@ export default function BountyBoardPage() {
               )}
             </div>
 
-            <button
+            <motion.button
               onClick={openCreate}
+              whileHover={{ scale: 1.04, backgroundColor: "#d4f500" }}
+              whileTap={{ scale: 0.96 }}
+              transition={{ duration: 0.14 }}
               style={{
                 padding: "9px 18px",
                 backgroundColor: "#c9ee00",
@@ -119,7 +129,7 @@ export default function BountyBoardPage() {
               }}
             >
               Post Bounty
-            </button>
+            </motion.button>
           </div>
 
           {/* Search + Sort */}
@@ -213,8 +223,8 @@ export default function BountyBoardPage() {
           </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12 }}>
-            {visible.map((b) => (
-              <BountyCard key={b.id} bounty={b} />
+            {visible.map((b, i) => (
+              <BountyCard key={b.id} bounty={b} index={i} />
             ))}
           </div>
         )}

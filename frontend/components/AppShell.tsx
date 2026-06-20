@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { WalletProvider } from "@/context/WalletContext";
 import { ToastProvider } from "@/context/ToastContext";
 import { ModalProvider, useModal } from "@/context/ModalContext";
@@ -32,7 +33,9 @@ function AppHeader() {
 
   return (
     <header style={{
-      backgroundColor: "#0a0a0a",
+      backgroundColor: "rgba(10,10,10,0.88)",
+      backdropFilter: "blur(16px)",
+      WebkitBackdropFilter: "blur(16px)",
       borderBottom: "1px solid #222220",
       position: "sticky",
       top: 0,
@@ -59,15 +62,19 @@ function AppHeader() {
             { href: "/", label: "Browse" },
             { href: "/dashboard", label: "My Bounties" },
           ].map(({ href, label }) => (
-            <Link key={href} href={href} style={{
+            <Link key={href} href={href} className="nav-link" style={{
               fontSize: 14, fontWeight: 500, color: "#888880",
               textDecoration: "none", padding: "5px 11px", borderRadius: 6,
+              transition: "color 0.15s, background-color 0.15s",
             }}>
               {label}
             </Link>
           ))}
-          <button
+          <motion.button
             onClick={openCreate}
+            whileHover={{ color: "#c9ee00", backgroundColor: "#151900" }}
+            whileTap={{ scale: 0.96 }}
+            transition={{ duration: 0.14 }}
             style={{
               fontSize: 14, fontWeight: 500, color: "#888880",
               background: "none", border: "none", padding: "5px 11px",
@@ -75,7 +82,7 @@ function AppHeader() {
             }}
           >
             Post Bounty
-          </button>
+          </motion.button>
         </nav>
 
         <div className="desktop-wallet">
@@ -108,7 +115,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               textAlign: "center",
               fontSize: 12,
               color: "#444440",
-              backgroundColor: "#0a0a0a",
+              backgroundColor: "rgba(10,10,10,0.88)",
+              backdropFilter: "blur(14px)",
+              WebkitBackdropFilter: "blur(14px)",
             }}>
               BountyBoard · Powered by Stellar &amp; Soroban · Testnet
             </footer>

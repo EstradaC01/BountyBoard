@@ -28,79 +28,87 @@ function AppModals() {
   );
 }
 
+const StarMark = ({ size = 18 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden="true">
+    <path d="M50,2 C52,42 58,48 98,50 C58,52 52,58 50,98 C48,58 42,52 2,50 C42,48 48,42 50,2Z" fill="#e03a7a" />
+  </svg>
+);
+
+const Brand = ({ size = 17 }: { size?: number }) => (
+  <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 9 }}>
+    <StarMark size={Math.round(size * 0.9)} />
+    <span style={{ fontWeight: 800, fontSize: size, letterSpacing: "-0.04em", lineHeight: 1 }}>
+      <span style={{ color: "#ebebdf" }}>Bounty</span><span style={{ color: "#c9ee00" }}>Board</span>
+    </span>
+  </Link>
+);
+
 function AppHeader() {
   const { openCreate } = useModal();
 
   return (
     <header style={{
-      backgroundColor: "rgba(10,10,10,0.88)",
-      backdropFilter: "blur(16px)",
-      WebkitBackdropFilter: "blur(16px)",
-      borderBottom: "1px solid #222220",
+      backgroundColor: "rgba(10,10,10,0.85)",
+      backdropFilter: "blur(12px)",
+      WebkitBackdropFilter: "blur(12px)",
+      borderBottom: "1px solid #1c1c1a",
       position: "sticky",
       top: 0,
       zIndex: 50,
     }}>
       <div style={{
-        maxWidth: 1152,
+        maxWidth: 1200,
         margin: "0 auto",
-        padding: "0 20px",
+        padding: "0 24px",
         height: 64,
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
+        gap: 16,
       }}>
-        {/* Logo — pink star4 mark (same shape as the background graphic system) + split text */}
-        <Link href="/" style={{
-          textDecoration: "none", display: "flex", alignItems: "center", gap: 9, flexShrink: 0,
-        }}>
-          <svg width="15" height="15" viewBox="0 0 100 100" aria-hidden="true">
-            <path d="M50,2 C52,42 58,48 98,50 C58,52 52,58 50,98 C48,58 42,52 2,50 C42,48 48,42 50,2Z" fill="#e03a7a"/>
-          </svg>
-          <span style={{ fontWeight: 800, fontSize: 17, letterSpacing: "-0.04em", lineHeight: 1 }}>
-            <span style={{ color: "#ebebdf" }}>Bounty</span><span style={{ color: "#c9ee00" }}>Board</span>
-          </span>
-        </Link>
+        <Brand />
 
-        <nav className="desktop-nav">
-          {[
-            { href: "/", label: "Browse" },
-            { href: "/dashboard", label: "My Bounties" },
-          ].map(({ href, label }) => (
-            <Link key={href} href={href} className="nav-link" style={{
-              fontSize: 14, fontWeight: 500, color: "#888880",
-              textDecoration: "none", padding: "5px 11px", borderRadius: 6,
-              transition: "color 0.15s, background-color 0.15s",
-            }}>
-              {label}
-            </Link>
-          ))}
+        {/* Desktop — nav, primary CTA, wallet */}
+        <div className="header-actions">
+          <nav style={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Link href="/" className="nav-link" style={navLinkStyle}>Browse</Link>
+            <Link href="/dashboard" className="nav-link" style={navLinkStyle}>My Bounties</Link>
+          </nav>
+
           <motion.button
             onClick={openCreate}
-            whileHover={{ color: "#c9ee00", backgroundColor: "#151900" }}
-            whileTap={{ scale: 0.96 }}
+            whileHover={{ scale: 1.03, backgroundColor: "#d4f500" }}
+            whileTap={{ scale: 0.97 }}
             transition={{ duration: 0.14 }}
             style={{
-              fontSize: 14, fontWeight: 500, color: "#888880",
-              background: "none", border: "none", padding: "5px 11px",
-              borderRadius: 6, cursor: "pointer", fontFamily: "inherit",
+              marginLeft: 6, padding: "8px 16px", borderRadius: 7,
+              backgroundColor: "#c9ee00", color: "#0a0a0a",
+              fontWeight: 700, fontSize: 14, border: "none", cursor: "pointer",
+              fontFamily: "inherit", letterSpacing: "-0.01em",
             }}
           >
             Post Bounty
           </motion.button>
-        </nav>
 
-        <div className="desktop-wallet">
+          <div style={{ width: 1, height: 26, backgroundColor: "#222220", margin: "0 6px" }} />
+
           <WalletConnect />
         </div>
 
-        <div className="mobile-menu">
+        {/* Mobile — hamburger */}
+        <div className="header-mobile">
           <MobileNav />
         </div>
       </div>
     </header>
   );
 }
+
+const navLinkStyle: React.CSSProperties = {
+  fontSize: 14, fontWeight: 500, color: "#9a9a92",
+  textDecoration: "none", padding: "7px 12px", borderRadius: 6,
+  transition: "color 0.15s, background-color 0.15s",
+};
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   return (

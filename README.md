@@ -113,4 +113,6 @@ Then `fund`, `submit_work`, and `approve` (or `dispute` / `resolve_dispute`) the
 
 MIT
 
+
+## Successful Testnet Transaction
 <img width="1897" height="795" alt="SmartContractScreenshot" src="https://github.com/user-attachments/assets/5ce44d77-f6d7-4cc1-b728-4320d0b96e67" />

@@ -10,6 +10,8 @@ import {
   resolveDispute,
   cancelBounty,
 } from "@/lib/contract";
+import { useToast } from "@/context/ToastContext";
+import { useWallet } from "@/context/WalletContext";
 
 interface Props {
   bounty: Bounty;
@@ -17,128 +19,134 @@ interface Props {
   onSuccess: () => void;
 }
 
+const LABELS: Record<string, { pending: string; active: string; success: string }> = {
+  Fund:          { pending: "Fund Escrow",        active: "Funding…",     success: "Escrow funded! XLM is now locked." },
+  Submit:        { pending: "Submit Work",         active: "Submitting…",  success: "Work submitted! Awaiting client approval." },
+  Approve:       { pending: "Approve & Release",   active: "Approving…",   success: "Approved! Funds released to freelancer." },
+  Dispute:       { pending: "Raise Dispute",       active: "Disputing…",   success: "Dispute raised. Waiting for arbiter." },
+  Cancel:        { pending: "Cancel Bounty",       active: "Cancelling…",  success: "Bounty cancelled." },
+  PayFreelancer: { pending: "Pay Freelancer",      active: "Resolving…",   success: "Resolved! Freelancer has been paid." },
+  RefundClient:  { pending: "Refund Client",       active: "Resolving…",   success: "Resolved! Client has been refunded." },
+};
+
 export default function ActionButtons({ bounty, walletAddress, onSuccess }: Props) {
   const [loading, setLoading] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { showToast, dismissToast } = useToast();
+  const { refreshBalance } = useWallet();
 
-  const isClient = walletAddress === bounty.client;
+  const isClient     = walletAddress === bounty.client;
   const isFreelancer = walletAddress === bounty.freelancer;
-  const isArbiter = walletAddress === bounty.arbiter;
+  const isArbiter    = walletAddress === bounty.arbiter;
 
-  async function run(label: string, fn: () => Promise<void>) {
-    setLoading(label);
-    setError(null);
+  async function run(key: string, fn: () => Promise<void>) {
+    setLoading(key);
+    const toastId = showToast(`${LABELS[key].active} Waiting for Freighter…`, "loading");
     try {
       await fn();
+      dismissToast(toastId);
+      showToast(LABELS[key].success, "success");
+      await refreshBalance();
       onSuccess();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Transaction failed");
+      dismissToast(toastId);
+      showToast(e instanceof Error ? e.message : "Transaction failed", "error");
     } finally {
       setLoading(null);
     }
   }
 
-  const btn =
-    "px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50";
-  const primary = `${btn} bg-indigo-600 hover:bg-indigo-700 text-white`;
-  const danger = `${btn} bg-red-600 hover:bg-red-700 text-white`;
-  const ghost = `${btn} border border-slate-300 hover:bg-slate-50 text-slate-700`;
+  const primaryBtn = (key: string, fn: () => Promise<void>) => (
+    <button
+      key={key}
+      disabled={!!loading}
+      onClick={() => run(key, fn)}
+      style={{
+        padding: "10px 20px",
+        borderRadius: 8,
+        border: "none",
+        backgroundColor: loading === key ? "#818cf8" : "#4f46e5",
+        color: "#fff",
+        fontWeight: 600,
+        fontSize: 14,
+        cursor: loading ? "not-allowed" : "pointer",
+        opacity: loading && loading !== key ? 0.5 : 1,
+        transition: "all 0.15s",
+      }}
+    >
+      {loading === key ? LABELS[key].active : LABELS[key].pending}
+    </button>
+  );
+
+  const dangerBtn = (key: string, fn: () => Promise<void>) => (
+    <button
+      key={key}
+      disabled={!!loading}
+      onClick={() => run(key, fn)}
+      style={{
+        padding: "10px 20px",
+        borderRadius: 8,
+        border: "none",
+        backgroundColor: loading === key ? "#f87171" : "#dc2626",
+        color: "#fff",
+        fontWeight: 600,
+        fontSize: 14,
+        cursor: loading ? "not-allowed" : "pointer",
+        opacity: loading && loading !== key ? 0.5 : 1,
+        transition: "all 0.15s",
+      }}
+    >
+      {loading === key ? LABELS[key].active : LABELS[key].pending}
+    </button>
+  );
+
+  const ghostBtn = (key: string, fn: () => Promise<void>) => (
+    <button
+      key={key}
+      disabled={!!loading}
+      onClick={() => run(key, fn)}
+      style={{
+        padding: "10px 20px",
+        borderRadius: 8,
+        border: "1.5px solid #e2e8f0",
+        backgroundColor: "#fff",
+        color: "#475569",
+        fontWeight: 600,
+        fontSize: 14,
+        cursor: loading ? "not-allowed" : "pointer",
+        opacity: loading && loading !== key ? 0.5 : 1,
+        transition: "all 0.15s",
+      }}
+    >
+      {loading === key ? LABELS[key].active : LABELS[key].pending}
+    </button>
+  );
+
+  const buttons: React.ReactNode[] = [];
+
+  if (isClient && bounty.status === "Open") {
+    buttons.push(primaryBtn("Fund", () => fundBounty(walletAddress, bounty.id)));
+    buttons.push(ghostBtn("Cancel", () => cancelBounty(walletAddress, bounty.id)));
+  }
+  if (isClient && bounty.status === "Submitted") {
+    buttons.push(primaryBtn("Approve", () => approveBounty(walletAddress, bounty.id)));
+    buttons.push(dangerBtn("Dispute", () => disputeBounty(walletAddress, bounty.id)));
+  }
+  if (isFreelancer && bounty.status === "Funded") {
+    buttons.push(primaryBtn("Submit", () => submitWork(walletAddress, bounty.id)));
+  }
+  if (isFreelancer && bounty.status === "Submitted") {
+    buttons.push(dangerBtn("Dispute", () => disputeBounty(walletAddress, bounty.id)));
+  }
+  if (isArbiter && bounty.status === "Disputed") {
+    buttons.push(primaryBtn("PayFreelancer", () => resolveDispute(walletAddress, bounty.id, "PayFreelancer")));
+    buttons.push(dangerBtn("RefundClient",  () => resolveDispute(walletAddress, bounty.id, "RefundClient")));
+  }
+
+  if (buttons.length === 0) return null;
 
   return (
-    <div className="space-y-3">
-      {error && (
-        <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
-      )}
-
-      <div className="flex flex-wrap gap-2">
-        {/* Client actions */}
-        {isClient && bounty.status === "Open" && (
-          <>
-            <button
-              className={primary}
-              disabled={!!loading}
-              onClick={() => run("Fund", () => fundBounty(walletAddress, bounty.id))}
-            >
-              {loading === "Fund" ? "Funding…" : "Fund Escrow"}
-            </button>
-            <button
-              className={ghost}
-              disabled={!!loading}
-              onClick={() => run("Cancel", () => cancelBounty(walletAddress, bounty.id))}
-            >
-              {loading === "Cancel" ? "Cancelling…" : "Cancel"}
-            </button>
-          </>
-        )}
-
-        {isClient && bounty.status === "Submitted" && (
-          <>
-            <button
-              className={primary}
-              disabled={!!loading}
-              onClick={() => run("Approve", () => approveBounty(walletAddress, bounty.id))}
-            >
-              {loading === "Approve" ? "Approving…" : "Approve & Release"}
-            </button>
-            <button
-              className={danger}
-              disabled={!!loading}
-              onClick={() => run("Dispute", () => disputeBounty(walletAddress, bounty.id))}
-            >
-              {loading === "Dispute" ? "Disputing…" : "Raise Dispute"}
-            </button>
-          </>
-        )}
-
-        {/* Freelancer actions */}
-        {isFreelancer && bounty.status === "Funded" && (
-          <button
-            className={primary}
-            disabled={!!loading}
-            onClick={() => run("Submit", () => submitWork(walletAddress, bounty.id))}
-          >
-            {loading === "Submit" ? "Submitting…" : "Submit Work"}
-          </button>
-        )}
-
-        {isFreelancer && bounty.status === "Submitted" && (
-          <button
-            className={danger}
-            disabled={!!loading}
-            onClick={() => run("Dispute", () => disputeBounty(walletAddress, bounty.id))}
-          >
-            {loading === "Dispute" ? "Disputing…" : "Raise Dispute"}
-          </button>
-        )}
-
-        {/* Arbiter actions */}
-        {isArbiter && bounty.status === "Disputed" && (
-          <>
-            <button
-              className={primary}
-              disabled={!!loading}
-              onClick={() =>
-                run("PayFreelancer", () =>
-                  resolveDispute(walletAddress, bounty.id, "PayFreelancer")
-                )
-              }
-            >
-              {loading === "PayFreelancer" ? "Resolving…" : "Pay Freelancer"}
-            </button>
-            <button
-              className={danger}
-              disabled={!!loading}
-              onClick={() =>
-                run("RefundClient", () =>
-                  resolveDispute(walletAddress, bounty.id, "RefundClient")
-                )
-              }
-            >
-              {loading === "RefundClient" ? "Resolving…" : "Refund Client"}
-            </button>
-          </>
-        )}
-      </div>
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+      {buttons}
     </div>
   );
 }

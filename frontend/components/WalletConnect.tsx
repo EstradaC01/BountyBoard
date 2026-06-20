@@ -7,20 +7,44 @@ function truncate(addr: string) {
 }
 
 export default function WalletConnect() {
-  const { address, connect, disconnect, connecting } = useWallet();
+  const { address, balance, connect, disconnect, connecting } = useWallet();
 
   if (address) {
     return (
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <span style={{ fontSize: 13, color: "#64748b", fontFamily: "monospace", backgroundColor: "#f1f5f9", padding: "4px 10px", borderRadius: 6 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {/* XLM Balance */}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          backgroundColor: "#ede9fe",
+          borderRadius: 8,
+          padding: "5px 12px",
+        }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#6d28d9" }}>
+            {balance !== null ? `${balance} XLM` : "···"}
+          </span>
+        </div>
+
+        {/* Address */}
+        <div style={{
+          fontSize: 13,
+          color: "#64748b",
+          fontFamily: "monospace",
+          backgroundColor: "#f1f5f9",
+          padding: "5px 10px",
+          borderRadius: 8,
+        }}>
           {truncate(address)}
-        </span>
+        </div>
+
+        {/* Disconnect */}
         <button
           onClick={disconnect}
           style={{
             fontSize: 13,
             fontWeight: 500,
-            padding: "6px 14px",
+            padding: "5px 12px",
             borderRadius: 8,
             border: "1.5px solid #e2e8f0",
             backgroundColor: "#fff",

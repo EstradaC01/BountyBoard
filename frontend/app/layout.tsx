@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { WalletProvider } from "@/context/WalletContext";
+import { ToastProvider } from "@/context/ToastContext";
 import WalletConnect from "@/components/WalletConnect";
 import Link from "next/link";
 
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body style={{ margin: 0, minHeight: "100vh", display: "flex", flexDirection: "column", backgroundColor: "#f8fafc", color: "#0f172a", fontFamily: "var(--font-geist-sans), Arial, sans-serif" }}>
         <WalletProvider>
+          <ToastProvider>
           {/* Header */}
           <header style={{
             backgroundColor: "#ffffff",
@@ -61,6 +63,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <footer style={{ borderTop: "1px solid #e2e8f0", padding: "20px 24px", textAlign: "center", fontSize: 12, color: "#94a3b8", backgroundColor: "#fff" }}>
             BountyBoard · Powered by Stellar &amp; Soroban · Testnet
           </footer>
+          </ToastProvider>
         </WalletProvider>
       </body>
     </html>

@@ -115,7 +115,7 @@ MIT
 
 
 ## Successful Testnet Transaction
-Screenshot of the testnet transaction in the explorer  \n
+Screenshot of the testnet transaction in the explorer.  
 
 TransactionID: Contract CBPSPVYP2U6N6PWU55IRHMYUP3PRKTNIUQRU2BLF37TVFABLEFHRTQ47
 <img width="1897" height="795" alt="SmartContractScreenshot" src="https://github.com/user-attachments/assets/5ce44d77-f6d7-4cc1-b728-4320d0b96e67" />

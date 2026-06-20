@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { motion } from "framer-motion";
 import { useModal } from "@/context/ModalContext";
@@ -16,7 +16,6 @@ const STATUS_ACCENT: Record<string, string> = {
   Cancelled: "#444440",
 };
 
-// Subtle tinted backgrounds — each status has its own character
 const STATUS_BG: Record<string, string> = {
   Open:      "#141414",
   Funded:    "#0c0c1c",
@@ -28,10 +27,17 @@ const STATUS_BG: Record<string, string> = {
 };
 
 function truncate(addr: string) {
-  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+  return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
 }
 
-export default function BountyCard({ bounty, index = 0 }: { bounty: Bounty; index?: number }) {
+interface Props {
+  bounty: Bounty;
+  index?: number;
+  isSaved?: boolean;
+  onToggleSave?: (id: number) => void;
+}
+
+export default function BountyCard({ bounty, index = 0, isSaved = false, onToggleSave }: Props) {
   const { openBounty } = useModal();
   const accent = STATUS_ACCENT[bounty.status] ?? "#444440";
   const bg = STATUS_BG[bounty.status] ?? "#141414";
@@ -59,7 +65,6 @@ export default function BountyCard({ bounty, index = 0 }: { bounty: Bounty; inde
       }}
       style={{
         backgroundColor: bg,
-        // subtle diagonal corner glow matching the status color
         backgroundImage: `linear-gradient(155deg, ${accent}0e 0%, transparent 48%)`,
         borderRadius: 8,
         border: "1px solid #222220",
@@ -70,8 +75,47 @@ export default function BountyCard({ bounty, index = 0 }: { bounty: Bounty; inde
         boxShadow: `inset 4px 0 0 ${accent}`,
         outline: "none",
         transition: "box-shadow 0.2s ease, border-color 0.2s ease",
+        position: "relative",
       } as React.CSSProperties}
     >
+      {/* Save button */}
+      {onToggleSave && (
+        <button
+          onClick={e => { e.stopPropagation(); onToggleSave(bounty.id); }}
+          title={isSaved ? "Remove from saved" : "Save for later"}
+          style={{
+            position: "absolute", top: 14, right: 14,
+            background: "none", border: "none", cursor: "pointer",
+            padding: 4, borderRadius: 4, lineHeight: 1,
+            color: isSaved ? "#e03a7a" : "#444440",
+            fontSize: 16,
+            transition: "color 0.15s, transform 0.15s",
+          }}
+          onMouseEnter={e => {
+            e.stopPropagation();
+            (e.currentTarget as HTMLElement).style.color = isSaved ? "#ff6099" : "#888880";
+            (e.currentTarget as HTMLElement).style.transform = "scale(1.2)";
+          }}
+          onMouseLeave={e => {
+            e.stopPropagation();
+            (e.currentTarget as HTMLElement).style.color = isSaved ? "#e03a7a" : "#444440";
+            (e.currentTarget as HTMLElement).style.transform = "scale(1)";
+          }}
+        >
+          {isSaved ? (
+            // Filled bookmark
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M5 3a2 2 0 0 0-2 2v16l9-4 9 4V5a2 2 0 0 0-2-2H5z"/>
+            </svg>
+          ) : (
+            // Outline bookmark
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 3a2 2 0 0 0-2 2v16l9-4 9 4V5a2 2 0 0 0-2-2H5z"/>
+            </svg>
+          )}
+        </button>
+      )}
+
       <div style={{ marginBottom: 12 }}>
         <BountyStatusBadge status={bounty.status} />
       </div>

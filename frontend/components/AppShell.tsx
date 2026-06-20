@@ -9,6 +9,7 @@ import MobileNav from "@/components/MobileNav";
 import Modal from "@/components/Modal";
 import BountyDetailContent from "@/components/BountyDetailContent";
 import CreateBountyForm from "@/components/CreateBountyForm";
+import BackgroundShapes from "@/components/BackgroundShapes";
 
 function AppModals() {
   const { modal, close } = useModal();
@@ -94,18 +95,25 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <WalletProvider>
       <ToastProvider>
         <ModalProvider>
-          <AppHeader />
-          <main style={{ flex: 1 }}>{children}</main>
-          <footer style={{
-            borderTop: "1px solid #222220",
-            padding: "20px 24px",
-            textAlign: "center",
-            fontSize: 12,
-            color: "#444440",
-            backgroundColor: "#0a0a0a",
-          }}>
-            BountyBoard · Powered by Stellar &amp; Soroban · Testnet
-          </footer>
+          {/* Fixed background layer — sits behind all content */}
+          <BackgroundShapes />
+
+          {/* Content stack — sits above the background */}
+          <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+            <AppHeader />
+            <main style={{ flex: 1 }}>{children}</main>
+            <footer style={{
+              borderTop: "1px solid #222220",
+              padding: "20px 24px",
+              textAlign: "center",
+              fontSize: 12,
+              color: "#444440",
+              backgroundColor: "#0a0a0a",
+            }}>
+              BountyBoard · Powered by Stellar &amp; Soroban · Testnet
+            </footer>
+          </div>
+
           <AppModals />
         </ModalProvider>
       </ToastProvider>

@@ -79,11 +79,14 @@ export default function DashboardPage() {
 
   return (
     <div style={{ maxWidth: 1152, margin: "0 auto", padding: "32px 24px" }}>
-      <h1 style={{ fontSize: 22, fontWeight: 800, color: "#ebebdf", margin: "0 0 4px 0", letterSpacing: "-0.03em" }}>
+      <p style={{ fontSize: 10, fontWeight: 700, color: "#e03a7a", textTransform: "uppercase", letterSpacing: "0.16em", margin: "0 0 6px 0" }}>
+        Connected Wallet
+      </p>
+      <h1 style={{ fontSize: 24, fontWeight: 800, color: "#ebebdf", margin: "0 0 4px 0", letterSpacing: "-0.04em" }}>
         My Bounties
       </h1>
       <p style={{ fontSize: 13, color: "#444440", margin: "0 0 24px 0" }}>
-        Wallet: <span style={{ fontFamily: "monospace" }}>{address.slice(0, 6)}…{address.slice(-4)}</span>
+        <span style={{ fontFamily: "monospace", color: "#666660" }}>{address.slice(0, 6)}…{address.slice(-4)}</span>
       </p>
 
       {/* Pending actions banner */}

@@ -50,11 +50,16 @@ function AppHeader() {
         alignItems: "center",
         justifyContent: "space-between",
       }}>
+        {/* Logo — pink star4 mark (same shape as the background graphic system) + split text */}
         <Link href="/" style={{
-          fontWeight: 800, fontSize: 17, color: "#c9ee00",
-          textDecoration: "none", letterSpacing: "-0.03em", flexShrink: 0,
+          textDecoration: "none", display: "flex", alignItems: "center", gap: 9, flexShrink: 0,
         }}>
-          BountyBoard
+          <svg width="15" height="15" viewBox="0 0 100 100" aria-hidden="true">
+            <path d="M50,2 C52,42 58,48 98,50 C58,52 52,58 50,98 C48,58 42,52 2,50 C42,48 48,42 50,2Z" fill="#e03a7a"/>
+          </svg>
+          <span style={{ fontWeight: 800, fontSize: 17, letterSpacing: "-0.04em", lineHeight: 1 }}>
+            <span style={{ color: "#ebebdf" }}>Bounty</span><span style={{ color: "#c9ee00" }}>Board</span>
+          </span>
         </Link>
 
         <nav className="desktop-nav">
@@ -119,7 +124,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               backdropFilter: "blur(14px)",
               WebkitBackdropFilter: "blur(14px)",
             }}>
-              BountyBoard · Powered by Stellar &amp; Soroban · Testnet
+              BountyBoard · Powered by{" "}
+              <span style={{ color: "#e53a0d" }}>Stellar</span>
+              {" "}&amp;{" "}
+              <span style={{ color: "#e03a7a" }}>Soroban</span>
+              {" "}· Testnet
             </footer>
           </div>
 

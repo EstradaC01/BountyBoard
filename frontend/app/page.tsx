@@ -75,30 +75,34 @@ export default function BountyBoardPage() {
           {/* Title row */}
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 18, flexWrap: "wrap" }}>
             <div>
-              <h1 style={{ fontSize: 28, fontWeight: 800, color: "#ebebdf", margin: 0, letterSpacing: "-0.04em" }}>
+              {/* Eyebrow — adds hierarchy and brings orange into the top of the page */}
+              <p style={{ fontSize: 10, fontWeight: 700, color: "#e53a0d", textTransform: "uppercase", letterSpacing: "0.16em", margin: "0 0 6px 0" }}>
+                Stellar Testnet
+              </p>
+              <h1 style={{ fontSize: 30, fontWeight: 800, color: "#ebebdf", margin: 0, letterSpacing: "-0.04em" }}>
                 Open Bounties
               </h1>
 
-              {/* Colored status breakdown */}
+              {/* Status breakdown — counts in their own accent color so data scans instantly */}
               {!loading && bounties.length > 0 && (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginTop: 10 }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginTop: 10 }}>
                   {ALL_STATUSES.map(s => {
                     const count = bounties.filter(b => b.status === s).length;
                     if (count === 0) return null;
+                    const col = FILTER_COLORS[s]?.accent ?? "#666660";
                     return (
                       <button
                         key={s}
                         onClick={() => setFilter(s)}
                         style={{
                           display: "flex", alignItems: "center", gap: 5,
-                          fontSize: 12, color: "#666660",
                           background: "none", border: "none", cursor: "pointer",
-                          padding: 0, fontFamily: "inherit",
+                          padding: "2px 0", fontFamily: "inherit",
                         }}
                       >
-                        <span style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: FILTER_COLORS[s]?.accent ?? "#666660", flexShrink: 0 }} />
-                        <span style={{ fontWeight: 700, color: "#888880" }}>{count}</span>
-                        <span>{s}</span>
+                        <span style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: col, flexShrink: 0 }} />
+                        <span style={{ fontSize: 15, fontWeight: 800, color: col, lineHeight: 1 }}>{count}</span>
+                        <span style={{ fontSize: 12, color: "#555550" }}>{s}</span>
                       </button>
                     );
                   })}
@@ -161,6 +165,12 @@ export default function BountyBoardPage() {
           </div>
 
           {/* Status filters */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: "#333330", textTransform: "uppercase", letterSpacing: "0.12em", flexShrink: 0 }}>
+              Filter
+            </span>
+            <div style={{ height: 1, flex: 1, backgroundColor: "#1e1e1c" }} />
+          </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {(["All", ...ALL_STATUSES] as const).map((s) => {
               const isActive = filter === s;

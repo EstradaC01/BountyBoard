@@ -37,8 +37,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           .nav-link:hover { color: #ebebdf !important; background-color: #1a1a18 !important; }
 
           * { box-sizing: border-box; }
-          ::selection { background: #c9ee0033; color: #ebebdf; }
-          :focus-visible { outline: 2px solid #c9ee00; outline-offset: 2px; }
+          ::selection { background: #e03a7a33; color: #ebebdf; }
+          :focus-visible { outline: 2px solid #e03a7a; outline-offset: 2px; }
+          input:focus, select:focus { border-color: #e03a7a !important; outline: none; }
+          input::placeholder { color: #444440; }
 
           @media (max-width: 640px) {
             .desktop-nav { display: none; }

@@ -49,117 +49,127 @@ export default function BountyBoardPage() {
   }, [bounties, filter, search, sort]);
 
   return (
-    <div style={{ backgroundColor: "#f8fafc", minHeight: "100%" }}>
-      {/* Hero */}
-      <div style={{ background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)", color: "#fff", padding: "48px 24px" }}>
-        <div style={{ maxWidth: 1152, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-          <div>
-            <h1 style={{ fontSize: 32, fontWeight: 800, marginBottom: 8, letterSpacing: "-0.5px" }}>Bounty Board</h1>
-            <p style={{ fontSize: 16, opacity: 0.85 }}>Trustless escrow for freelancers — powered by Stellar &amp; Soroban.</p>
+    <div style={{ backgroundColor: "#0a0a0a", minHeight: "100%" }}>
+      {/* Page header */}
+      <div style={{ borderBottom: "1px solid #222220", padding: "24px 24px 0" }}>
+        <div style={{ maxWidth: 1152, margin: "0 auto" }}>
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, marginBottom: 20, flexWrap: "wrap" }}>
+            <div>
+              <h1 style={{ fontSize: 22, fontWeight: 800, color: "#ebebdf", margin: 0, letterSpacing: "-0.03em" }}>
+                Open Bounties
+              </h1>
+              {!loading && (
+                <p style={{ fontSize: 13, color: "#444440", margin: "4px 0 0 0" }}>
+                  {bounties.length} {bounties.length === 1 ? "bounty" : "bounties"} on-chain
+                </p>
+              )}
+            </div>
+            <Link href="/create" style={{
+              display: "inline-block",
+              padding: "9px 18px",
+              backgroundColor: "#c9ee00",
+              color: "#0a0a0a",
+              borderRadius: 6,
+              fontWeight: 700,
+              fontSize: 14,
+              textDecoration: "none",
+              letterSpacing: "-0.01em",
+            }}>
+              Post Bounty
+            </Link>
           </div>
-          <Link href="/create" style={{
-            display: "inline-block",
-            padding: "12px 24px",
-            backgroundColor: "#fff",
-            color: "#4f46e5",
-            borderRadius: 10,
-            fontWeight: 700,
-            fontSize: 14,
-            textDecoration: "none",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-          }}>
-            + Post Bounty
-          </Link>
+
+          {/* Search + Sort */}
+          <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+            <input
+              type="text"
+              placeholder="Search bounties…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{
+                flex: 1,
+                minWidth: 200,
+                padding: "9px 14px",
+                borderRadius: 6,
+                border: "1px solid #222220",
+                fontSize: 14,
+                color: "#ebebdf",
+                backgroundColor: "#141414",
+                outline: "none",
+                fontFamily: "inherit",
+              }}
+            />
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value as SortKey)}
+              style={{
+                padding: "9px 14px",
+                borderRadius: 6,
+                border: "1px solid #222220",
+                fontSize: 14,
+                color: "#888880",
+                backgroundColor: "#141414",
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
+            >
+              {SORT_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Status filters */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {(["All", ...ALL_STATUSES] as const).map((s) => (
+              <button
+                key={s}
+                onClick={() => setFilter(s)}
+                style={{
+                  padding: "5px 14px",
+                  borderRadius: 4,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  letterSpacing: "0.02em",
+                  border: filter === s ? "none" : "1px solid #222220",
+                  backgroundColor: filter === s ? "#c9ee00" : "transparent",
+                  color: filter === s ? "#0a0a0a" : "#666660",
+                  cursor: "pointer",
+                  transition: "all 0.12s",
+                }}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+
+          {/* Results count when filtered */}
+          {!loading && (filter !== "All" || search) && (
+            <p style={{ fontSize: 12, color: "#444440", margin: "12px 0 0 0" }}>
+              {visible.length} {visible.length === 1 ? "result" : "results"}
+            </p>
+          )}
         </div>
       </div>
 
-      <div style={{ maxWidth: 1152, margin: "0 auto", padding: "32px 24px" }}>
-
-        {/* Search + Sort bar */}
-        <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
-          <input
-            type="text"
-            placeholder="Search bounties…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{
-              flex: 1,
-              minWidth: 200,
-              padding: "10px 14px",
-              borderRadius: 8,
-              border: "1.5px solid #e2e8f0",
-              fontSize: 14,
-              color: "#1e293b",
-              backgroundColor: "#fff",
-              outline: "none",
-            }}
-          />
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value as SortKey)}
-            style={{
-              padding: "10px 14px",
-              borderRadius: 8,
-              border: "1.5px solid #e2e8f0",
-              fontSize: 14,
-              color: "#475569",
-              backgroundColor: "#fff",
-              cursor: "pointer",
-            }}
-          >
-            {SORT_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Status filters */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 28 }}>
-          {(["All", ...ALL_STATUSES] as const).map((s) => (
-            <button
-              key={s}
-              onClick={() => setFilter(s)}
-              style={{
-                padding: "6px 16px",
-                borderRadius: 999,
-                fontSize: 13,
-                fontWeight: 500,
-                border: filter === s ? "none" : "1.5px solid #e2e8f0",
-                backgroundColor: filter === s ? "#4f46e5" : "#fff",
-                color: filter === s ? "#fff" : "#475569",
-                cursor: "pointer",
-              }}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-
-        {/* Results count */}
-        {!loading && (
-          <p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 16 }}>
-            {visible.length} {visible.length === 1 ? "bounty" : "bounties"} found
-          </p>
-        )}
-
-        {/* Grid */}
+      {/* Grid */}
+      <div style={{ maxWidth: 1152, margin: "0 auto", padding: "24px" }}>
         {loading ? (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12 }}>
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} style={{ backgroundColor: "#fff", borderRadius: 12, border: "1px solid #e2e8f0", height: 180, opacity: 0.4 }} />
+              <div key={i} style={{ backgroundColor: "#141414", borderRadius: 8, border: "1px solid #222220", height: 180, opacity: 0.5 }} />
             ))}
           </div>
         ) : visible.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "80px 24px", color: "#94a3b8" }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>📋</div>
-            <p style={{ fontSize: 18, fontWeight: 600, color: "#64748b", marginBottom: 8 }}>No bounties found</p>
-            <p style={{ fontSize: 14 }}>
-              {search ? `No results for "${search}" — ` : filter !== "All" ? "Try a different filter, or " : ""}
-              <Link href="/create" style={{ color: "#4f46e5", textDecoration: "underline" }}>post the first one</Link>.
+          <div style={{ textAlign: "center", padding: "80px 24px" }}>
+            <p style={{ fontSize: 16, fontWeight: 600, color: "#444440", marginBottom: 8 }}>No bounties here.</p>
+            <p style={{ fontSize: 14, color: "#333330" }}>
+              {search ? `Nothing matches "${search}" — ` : filter !== "All" ? "Try a different filter, or " : ""}
+              <Link href="/create" style={{ color: "#c9ee00", textDecoration: "none", fontWeight: 600 }}>post one</Link>.
             </p>
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12 }}>
             {visible.map((b) => (
               <BountyCard key={b.id} bounty={b} />
             ))}

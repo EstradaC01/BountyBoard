@@ -3,13 +3,13 @@
 import type { BountyStatus } from "@/types/bounty";
 
 const styles: Record<BountyStatus, { bg: string; color: string }> = {
-  Open:      { bg: "#f1f5f9", color: "#475569" },
-  Funded:    { bg: "#dbeafe", color: "#1d4ed8" },
-  Submitted: { bg: "#fef9c3", color: "#a16207" },
-  Approved:  { bg: "#dcfce7", color: "#15803d" },
-  Disputed:  { bg: "#fee2e2", color: "#b91c1c" },
-  Resolved:  { bg: "#ede9fe", color: "#6d28d9" },
-  Cancelled: { bg: "#f1f5f9", color: "#94a3b8" },
+  Open:      { bg: "#1f1f1d", color: "#ebebdf" },
+  Funded:    { bg: "#3535d5", color: "#ebebdf" },
+  Submitted: { bg: "#e53a0d", color: "#ebebdf" },
+  Approved:  { bg: "#c9ee00", color: "#0a0a0a" },
+  Disputed:  { bg: "#e53a0d", color: "#ebebdf" },
+  Resolved:  { bg: "#e03a7a", color: "#ebebdf" },
+  Cancelled: { bg: "#1f1f1d", color: "#555550" },
 };
 
 export default function BountyStatusBadge({ status }: { status: BountyStatus }) {
@@ -18,10 +18,10 @@ export default function BountyStatusBadge({ status }: { status: BountyStatus }) 
     <span style={{
       display: "inline-block",
       padding: "3px 10px",
-      borderRadius: 999,
+      borderRadius: 4,
       fontSize: 11,
       fontWeight: 700,
-      letterSpacing: "0.3px",
+      letterSpacing: "0.5px",
       textTransform: "uppercase",
       backgroundColor: bg,
       color,

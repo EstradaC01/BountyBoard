@@ -62,14 +62,14 @@ export default function ActionButtons({ bounty, walletAddress, onSuccess }: Prop
       onClick={() => run(key, fn)}
       style={{
         padding: "10px 20px",
-        borderRadius: 8,
+        borderRadius: 6,
         border: "none",
-        backgroundColor: loading === key ? "#818cf8" : "#4f46e5",
-        color: "#fff",
-        fontWeight: 600,
+        backgroundColor: loading === key ? "#a8c700" : "#c9ee00",
+        color: "#0a0a0a",
+        fontWeight: 700,
         fontSize: 14,
         cursor: loading ? "not-allowed" : "pointer",
-        opacity: loading && loading !== key ? 0.5 : 1,
+        opacity: loading && loading !== key ? 0.4 : 1,
         transition: "all 0.15s",
       }}
     >
@@ -84,14 +84,14 @@ export default function ActionButtons({ bounty, walletAddress, onSuccess }: Prop
       onClick={() => run(key, fn)}
       style={{
         padding: "10px 20px",
-        borderRadius: 8,
+        borderRadius: 6,
         border: "none",
-        backgroundColor: loading === key ? "#f87171" : "#dc2626",
-        color: "#fff",
-        fontWeight: 600,
+        backgroundColor: loading === key ? "#c03000" : "#e53a0d",
+        color: "#ebebdf",
+        fontWeight: 700,
         fontSize: 14,
         cursor: loading ? "not-allowed" : "pointer",
-        opacity: loading && loading !== key ? 0.5 : 1,
+        opacity: loading && loading !== key ? 0.4 : 1,
         transition: "all 0.15s",
       }}
     >
@@ -106,14 +106,14 @@ export default function ActionButtons({ bounty, walletAddress, onSuccess }: Prop
       onClick={() => run(key, fn)}
       style={{
         padding: "10px 20px",
-        borderRadius: 8,
-        border: "1.5px solid #e2e8f0",
-        backgroundColor: "#fff",
-        color: "#475569",
+        borderRadius: 6,
+        border: "1.5px solid #333330",
+        backgroundColor: "transparent",
+        color: "#ebebdf",
         fontWeight: 600,
         fontSize: 14,
         cursor: loading ? "not-allowed" : "pointer",
-        opacity: loading && loading !== key ? 0.5 : 1,
+        opacity: loading && loading !== key ? 0.4 : 1,
         transition: "all 0.15s",
       }}
     >

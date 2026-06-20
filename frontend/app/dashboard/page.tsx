@@ -57,14 +57,15 @@ export default function DashboardPage() {
   if (!address) {
     return (
       <div style={{ maxWidth: 480, margin: "0 auto", padding: "80px 24px", textAlign: "center" }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>🔐</div>
-        <h1 style={{ fontSize: 20, fontWeight: 700, color: "#1e293b", margin: "0 0 8px 0" }}>Connect your wallet</h1>
-        <p style={{ fontSize: 14, color: "#64748b", margin: "0 0 24px 0" }}>
+        <h1 style={{ fontSize: 20, fontWeight: 800, color: "#ebebdf", margin: "0 0 8px 0", letterSpacing: "-0.02em" }}>
+          Connect your wallet
+        </h1>
+        <p style={{ fontSize: 14, color: "#444440", margin: "0 0 24px 0" }}>
           See all bounties where you&apos;re the client, freelancer, or arbiter.
         </p>
         <button
           onClick={connect}
-          style={{ padding: "10px 24px", backgroundColor: "#4f46e5", color: "#fff", borderRadius: 8, border: "none", fontWeight: 600, fontSize: 14, cursor: "pointer" }}
+          style={{ padding: "10px 24px", backgroundColor: "#c9ee00", color: "#0a0a0a", borderRadius: 6, border: "none", fontWeight: 700, fontSize: 14, cursor: "pointer" }}
         >
           Connect Freighter
         </button>
@@ -77,15 +78,17 @@ export default function DashboardPage() {
 
   return (
     <div style={{ maxWidth: 1152, margin: "0 auto", padding: "32px 24px" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 800, color: "#1e293b", margin: "0 0 4px 0" }}>My Bounties</h1>
-      <p style={{ fontSize: 13, color: "#94a3b8", margin: "0 0 24px 0" }}>
+      <h1 style={{ fontSize: 22, fontWeight: 800, color: "#ebebdf", margin: "0 0 4px 0", letterSpacing: "-0.03em" }}>
+        My Bounties
+      </h1>
+      <p style={{ fontSize: 13, color: "#444440", margin: "0 0 24px 0" }}>
         Wallet: <span style={{ fontFamily: "monospace" }}>{address.slice(0, 6)}…{address.slice(-4)}</span>
       </p>
 
       {/* Pending actions banner */}
       {pendingActions.length > 0 && (
         <div style={{ marginBottom: 28 }}>
-          <h2 style={{ fontSize: 13, fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.5px", margin: "0 0 10px 0" }}>
+          <h2 style={{ fontSize: 11, fontWeight: 700, color: "#444440", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 10px 0" }}>
             Needs your attention ({pendingActions.length})
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -96,18 +99,18 @@ export default function DashboardPage() {
                   alignItems: "center",
                   gap: 14,
                   padding: "14px 16px",
-                  borderRadius: 10,
-                  border: `1.5px solid ${urgency === "high" ? "#fca5a5" : "#fde68a"}`,
-                  backgroundColor: urgency === "high" ? "#fff5f5" : "#fffbeb",
+                  borderRadius: 8,
+                  border: `1px solid ${urgency === "high" ? "#e53a0d" : "#3535d5"}`,
+                  backgroundColor: urgency === "high" ? "#150808" : "#08080f",
                   cursor: "pointer",
-                  transition: "box-shadow 0.15s",
+                  transition: "opacity 0.15s",
                 }}
-                  onMouseEnter={e => (e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.08)")}
-                  onMouseLeave={e => (e.currentTarget.style.boxShadow = "none")}
+                  onMouseEnter={e => (e.currentTarget.style.opacity = "0.85")}
+                  onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
                 >
-                  <span style={{ fontSize: 20, flexShrink: 0 }}>{urgency === "high" ? "🔴" : "🟡"}</span>
-                  <p style={{ fontSize: 13, fontWeight: 500, color: "#1e293b", margin: 0, flex: 1 }}>{message}</p>
-                  <span style={{ fontSize: 12, color: "#4f46e5", fontWeight: 600, flexShrink: 0 }}>View →</span>
+                  <span style={{ fontSize: 18, flexShrink: 0 }}>{urgency === "high" ? "🔴" : "🔵"}</span>
+                  <p style={{ fontSize: 13, fontWeight: 500, color: "#ebebdf", margin: 0, flex: 1 }}>{message}</p>
+                  <span style={{ fontSize: 12, color: "#c9ee00", fontWeight: 700, flexShrink: 0 }}>View →</span>
                 </div>
               </Link>
             ))}
@@ -116,7 +119,7 @@ export default function DashboardPage() {
       )}
 
       {/* Role tabs */}
-      <div style={{ display: "flex", gap: 4, backgroundColor: "#f1f5f9", borderRadius: 10, padding: 4, width: "fit-content", marginBottom: 24 }}>
+      <div style={{ display: "flex", gap: 4, backgroundColor: "#141414", border: "1px solid #222220", borderRadius: 8, padding: 4, width: "fit-content", marginBottom: 24 }}>
         {(Object.keys(ROLE_LABELS) as Role[]).map((r) => {
           const count = bounties.filter((b) => b[r] === address).length;
           return (
@@ -124,46 +127,45 @@ export default function DashboardPage() {
               key={r}
               onClick={() => setActiveRole(r)}
               style={{
-                padding: "8px 18px",
-                borderRadius: 8,
-                border: "none",
-                backgroundColor: activeRole === r ? "#fff" : "transparent",
-                color: activeRole === r ? "#1e293b" : "#64748b",
-                fontWeight: activeRole === r ? 700 : 500,
+                padding: "6px 16px",
+                borderRadius: 6,
                 fontSize: 13,
+                fontWeight: 600,
+                border: "none",
                 cursor: "pointer",
-                boxShadow: activeRole === r ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
-                transition: "all 0.15s",
+                backgroundColor: activeRole === r ? "#c9ee00" : "transparent",
+                color: activeRole === r ? "#0a0a0a" : "#666660",
+                transition: "all 0.12s",
               }}
             >
               {ROLE_LABELS[r]}
               {!loading && (
-                <span style={{ marginLeft: 6, fontSize: 11, color: "#94a3b8" }}>({count})</span>
+                <span style={{ marginLeft: 6, fontSize: 11, opacity: 0.7 }}>({count})</span>
               )}
             </button>
           );
         })}
       </div>
 
-      {/* Bounty grid */}
       {loading ? (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12 }}>
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} style={{ backgroundColor: "#fff", borderRadius: 12, border: "1px solid #e2e8f0", height: 180, opacity: 0.4 }} />
+            <div key={i} style={{ backgroundColor: "#141414", borderRadius: 8, border: "1px solid #222220", height: 176 }} />
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "60px 24px", color: "#94a3b8" }}>
-          <div style={{ fontSize: 36, marginBottom: 12 }}>📭</div>
-          <p style={{ fontWeight: 600, color: "#64748b", marginBottom: 8 }}>No bounties as {activeRole}</p>
+        <div style={{ textAlign: "center", padding: "64px 24px" }}>
+          <p style={{ fontSize: 15, fontWeight: 600, color: "#444440", marginBottom: 8 }}>
+            No bounties as {activeRole}.
+          </p>
           {activeRole === "client" && (
-            <Link href="/create" style={{ color: "#4f46e5", textDecoration: "underline", fontSize: 14 }}>
+            <Link href="/create" style={{ color: "#c9ee00", textDecoration: "none", fontSize: 14, fontWeight: 600 }}>
               Post your first bounty
             </Link>
           )}
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 12 }}>
           {filtered.map((b) => (
             <BountyCard key={b.id} bounty={b} />
           ))}

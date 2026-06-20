@@ -45,9 +45,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   };
 
   const colors: Record<ToastType, { bg: string; border: string; icon: string; text: string }> = {
-    success: { bg: "#f0fdf4", border: "#86efac", icon: "#16a34a", text: "#15803d" },
-    error:   { bg: "#fef2f2", border: "#fca5a5", icon: "#dc2626", text: "#b91c1c" },
-    loading: { bg: "#eff6ff", border: "#93c5fd", icon: "#2563eb", text: "#1d4ed8" },
+    success: { bg: "#141414", border: "#c9ee00",  icon: "#c9ee00",  text: "#ebebdf" },
+    error:   { bg: "#141414", border: "#e53a0d",  icon: "#e53a0d",  text: "#ebebdf" },
+    loading: { bg: "#141414", border: "#3535d5",  icon: "#3535d5",  text: "#ebebdf" },
   };
 
   return (
@@ -80,7 +80,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 padding: "12px 16px",
                 minWidth: 260,
                 maxWidth: 360,
-                boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
+                boxShadow: "0 4px 24px rgba(0,0,0,0.6)",
                 pointerEvents: "all",
                 animation: "slideIn 0.2s ease",
               }}

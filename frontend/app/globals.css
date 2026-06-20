@@ -1,8 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #0a0a0a;
+  --foreground: #ebebdf;
+  --surface: #141414;
+  --border: #222220;
+  --border-hi: #333330;
+  --muted: #888880;
+  --faint: #444440;
+  --chartreuse: #c9ee00;
+  --cobalt: #3535d5;
+  --orange: #e53a0d;
+  --pink: #e03a7a;
 }
 
 @theme inline {
@@ -12,7 +21,6 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* Force light mode — no dark mode override */
 body {
   background: var(--background);
   color: var(--foreground);

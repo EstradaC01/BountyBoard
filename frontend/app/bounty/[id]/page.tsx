@@ -31,7 +31,6 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
     else setBounty(b);
     setLoading(false);
 
-    // Fetch activity timeline
     const evts = await getBountyEvents(Number(id));
     setEvents(evts);
   }, [id]);
@@ -50,85 +49,88 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
     return (
       <div style={{ maxWidth: 720, margin: "0 auto", padding: "32px 24px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
-          <div style={{ width: 100, height: 16, backgroundColor: "#e2e8f0", borderRadius: 6 }} />
-          <div style={{ width: 80, height: 16, backgroundColor: "#e2e8f0", borderRadius: 6 }} />
+          <div style={{ width: 100, height: 16, backgroundColor: "#1f1f1d", borderRadius: 4 }} />
+          <div style={{ width: 80, height: 16, backgroundColor: "#1f1f1d", borderRadius: 4 }} />
         </div>
         <SkeletonCard />
-        <div style={{ backgroundColor: "#fff", borderRadius: 14, border: "1.5px solid #e2e8f0", padding: 24, height: 80, opacity: 0.5 }} />
+        <div style={{ backgroundColor: "#141414", borderRadius: 8, border: "1px solid #222220", padding: 24, height: 80, opacity: 0.5 }} />
       </div>
     );
   }
 
   if (notFound || !bounty) {
     return (
-      <div style={{ maxWidth: 720, margin: "0 auto", padding: "80px 24px", textAlign: "center", color: "#94a3b8" }}>
-        <div style={{ fontSize: 48, marginBottom: 12 }}>🔍</div>
-        <p style={{ fontSize: 18, fontWeight: 600, color: "#64748b" }}>Bounty #{id} not found</p>
-        <Link href="/" style={{ color: "#4f46e5", textDecoration: "underline", fontSize: 14 }}>Back to board</Link>
+      <div style={{ maxWidth: 720, margin: "0 auto", padding: "80px 24px", textAlign: "center" }}>
+        <p style={{ fontSize: 18, fontWeight: 600, color: "#444440", marginBottom: 8 }}>Bounty #{id} not found.</p>
+        <Link href="/" style={{ color: "#c9ee00", textDecoration: "none", fontSize: 14, fontWeight: 600 }}>← Back to board</Link>
       </div>
     );
   }
 
   const infoRow = (label: string, value: string) => (
-    <div style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: "1px solid #f1f5f9" }}>
-      <span style={{ fontSize: 13, fontWeight: 600, color: "#94a3b8", width: 100, flexShrink: 0 }}>{label}</span>
-      <span style={{ fontSize: 13, fontFamily: "monospace", color: "#475569", wordBreak: "break-all" }}>{value}</span>
+    <div style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: "1px solid #1a1a18" }}>
+      <span style={{ fontSize: 12, fontWeight: 700, color: "#444440", width: 100, flexShrink: 0, letterSpacing: "0.04em", textTransform: "uppercase" }}>{label}</span>
+      <span style={{ fontSize: 13, fontFamily: "monospace", color: "#888880", wordBreak: "break-all" }}>{value}</span>
     </div>
   );
 
-  // Map first topic (action name) to a readable label
   const eventLabel: Record<string, string> = {
-    create_bounty:    "Bounty created",
-    fund:             "Escrow funded",
-    submit_work:      "Work submitted",
-    approve:          "Work approved — funds released",
-    dispute:          "Dispute raised",
-    resolve_dispute:  "Dispute resolved",
-    cancel:           "Bounty cancelled",
+    create_bounty:   "Bounty created",
+    fund:            "Escrow funded",
+    submit_work:     "Work submitted",
+    approve:         "Work approved — funds released",
+    dispute:         "Dispute raised",
+    resolve_dispute: "Dispute resolved",
+    cancel:          "Bounty cancelled",
   };
 
   const statusDotColor: Record<string, string> = {
-    create_bounty: "#94a3b8",
-    fund: "#2563eb",
-    submit_work: "#d97706",
-    approve: "#16a34a",
-    dispute: "#dc2626",
-    resolve_dispute: "#7c3aed",
-    cancel: "#94a3b8",
+    create_bounty:   "#444440",
+    fund:            "#3535d5",
+    submit_work:     "#e53a0d",
+    approve:         "#c9ee00",
+    dispute:         "#e53a0d",
+    resolve_dispute: "#e03a7a",
+    cancel:          "#444440",
   };
 
   return (
     <div style={{ maxWidth: 720, margin: "0 auto", padding: "32px 24px" }}>
-      {/* Back + Share row */}
+      {/* Back + Share */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-        <Link href="/" style={{ fontSize: 14, color: "#4f46e5", textDecoration: "none" }}>← Back to board</Link>
+        <Link href="/" style={{ fontSize: 14, fontWeight: 600, color: "#888880", textDecoration: "none" }}>← Back to board</Link>
         <button
           onClick={copyLink}
           style={{
             fontSize: 13,
-            fontWeight: 500,
+            fontWeight: 600,
             padding: "6px 14px",
-            borderRadius: 8,
-            border: "1.5px solid #e2e8f0",
-            backgroundColor: copied ? "#f0fdf4" : "#fff",
-            color: copied ? "#16a34a" : "#475569",
+            borderRadius: 6,
+            border: "1px solid #333330",
+            backgroundColor: copied ? "#c9ee00" : "transparent",
+            color: copied ? "#0a0a0a" : "#888880",
             cursor: "pointer",
-            transition: "all 0.2s",
+            transition: "all 0.15s",
           }}
         >
-          {copied ? "✓ Copied!" : "🔗 Share"}
+          {copied ? "✓ Copied!" : "Share"}
         </button>
       </div>
 
       {/* Main card */}
-      <div style={{ backgroundColor: "#fff", borderRadius: 14, border: "1.5px solid #e2e8f0", padding: 24, marginBottom: 16 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 12 }}>
-          <h1 style={{ fontSize: 20, fontWeight: 700, color: "#1e293b", margin: 0 }}>{bounty.description}</h1>
+      <div style={{ backgroundColor: "#141414", borderRadius: 8, border: "1px solid #222220", padding: 24, marginBottom: 12 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 16 }}>
+          <h1 style={{ fontSize: 19, fontWeight: 700, color: "#ebebdf", margin: 0, letterSpacing: "-0.02em", lineHeight: 1.3 }}>
+            {bounty.description}
+          </h1>
           <BountyStatusBadge status={bounty.status} />
         </div>
-        <p style={{ fontSize: 32, fontWeight: 800, color: "#4f46e5", margin: "0 0 24px 0" }}>
-          {stroopsToXlm(bounty.amount)} <span style={{ fontSize: 16, fontWeight: 600, color: "#818cf8" }}>XLM</span>
+
+        <p style={{ fontSize: 56, fontWeight: 800, color: "#c9ee00", margin: "0 0 24px 0", letterSpacing: "-0.04em", lineHeight: 1 }}>
+          {stroopsToXlm(bounty.amount)}{" "}
+          <span style={{ fontSize: 20, fontWeight: 700, color: "#444440", letterSpacing: "0.04em" }}>XLM</span>
         </p>
+
         <div>
           {infoRow("Bounty #", `#${bounty.id}`)}
           {infoRow("Client", truncate(bounty.client))}
@@ -139,53 +141,51 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
       </div>
 
       {/* Flow hint */}
-      <div style={{ backgroundColor: "#f8fafc", borderRadius: 10, border: "1px solid #e2e8f0", padding: "12px 16px", marginBottom: 16, fontSize: 12, color: "#64748b" }}>
-        <span style={{ fontWeight: 600 }}>Flow: </span>
+      <div style={{ backgroundColor: "#141414", borderRadius: 8, border: "1px solid #222220", padding: "12px 16px", marginBottom: 12, fontSize: 12, color: "#444440" }}>
+        <span style={{ fontWeight: 700, color: "#666660" }}>Flow: </span>
         Open → Funded → Submitted → Approved &nbsp;|&nbsp; Disputed → Resolved
       </div>
 
       {/* Actions */}
       {address ? (
-        <div style={{ backgroundColor: "#fff", borderRadius: 14, border: "1.5px solid #e2e8f0", padding: 24, marginBottom: 16 }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700, color: "#1e293b", margin: "0 0 16px 0" }}>Actions</h2>
+        <div style={{ backgroundColor: "#141414", borderRadius: 8, border: "1px solid #222220", padding: 24, marginBottom: 12 }}>
+          <h2 style={{ fontSize: 13, fontWeight: 700, color: "#444440", margin: "0 0 16px 0", letterSpacing: "0.06em", textTransform: "uppercase" }}>Actions</h2>
           <ActionButtons bounty={bounty} walletAddress={address} onSuccess={refresh} />
         </div>
       ) : (
-        <div style={{ backgroundColor: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 10, padding: "14px 16px", textAlign: "center", fontSize: 14, color: "#1d4ed8", marginBottom: 16 }}>
+        <div style={{ backgroundColor: "#141414", border: "1px solid #222220", borderRadius: 8, padding: "14px 16px", textAlign: "center", fontSize: 14, color: "#666660", marginBottom: 12 }}>
           Connect your wallet to take action on this bounty.
         </div>
       )}
 
       {/* Activity Timeline */}
-      <div style={{ backgroundColor: "#fff", borderRadius: 14, border: "1.5px solid #e2e8f0", padding: 24 }}>
-        <h2 style={{ fontSize: 15, fontWeight: 700, color: "#1e293b", margin: "0 0 20px 0" }}>Activity</h2>
+      <div style={{ backgroundColor: "#141414", borderRadius: 8, border: "1px solid #222220", padding: 24 }}>
+        <h2 style={{ fontSize: 13, fontWeight: 700, color: "#444440", margin: "0 0 20px 0", letterSpacing: "0.06em", textTransform: "uppercase" }}>Activity</h2>
 
         {events.length === 0 ? (
-          <p style={{ fontSize: 13, color: "#94a3b8", margin: 0 }}>No on-chain events found for this bounty yet.</p>
+          <p style={{ fontSize: 13, color: "#444440", margin: 0 }}>No on-chain events yet.</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
             {events.map((evt, i) => {
               const action = evt.topics[0] ?? "unknown";
-              const dot = statusDotColor[action] ?? "#94a3b8";
+              const dot = statusDotColor[action] ?? "#444440";
               const isLast = i === events.length - 1;
               return (
                 <div key={i} style={{ display: "flex", gap: 16 }}>
-                  {/* Timeline line + dot */}
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 20, flexShrink: 0 }}>
-                    <div style={{ width: 12, height: 12, borderRadius: "50%", backgroundColor: dot, flexShrink: 0, marginTop: 2 }} />
-                    {!isLast && <div style={{ width: 2, flex: 1, backgroundColor: "#e2e8f0", minHeight: 24 }} />}
+                    <div style={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: dot, flexShrink: 0, marginTop: 3 }} />
+                    {!isLast && <div style={{ width: 1, flex: 1, backgroundColor: "#222220", minHeight: 24 }} />}
                   </div>
-                  {/* Content */}
                   <div style={{ paddingBottom: isLast ? 0 : 20, flex: 1 }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: "#1e293b", margin: "0 0 2px 0" }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: "#ebebdf", margin: "0 0 2px 0" }}>
                       {eventLabel[action] ?? action}
                     </p>
-                    <p style={{ fontSize: 12, color: "#94a3b8", margin: "0 0 2px 0" }}>{evt.timestamp}</p>
+                    <p style={{ fontSize: 12, color: "#444440", margin: "0 0 2px 0" }}>{evt.timestamp}</p>
                     <a
                       href={`https://stellar.expert/explorer/testnet/tx/${evt.txHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ fontSize: 11, color: "#4f46e5", fontFamily: "monospace" }}
+                      style={{ fontSize: 11, color: "#3535d5", fontFamily: "monospace" }}
                     >
                       {evt.txHash.slice(0, 12)}…
                     </a>

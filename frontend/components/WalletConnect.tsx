@@ -12,43 +12,40 @@ export default function WalletConnect() {
   if (address) {
     return (
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        {/* XLM Balance */}
         <div style={{
           display: "flex",
           alignItems: "center",
           gap: 6,
-          backgroundColor: "#ede9fe",
-          borderRadius: 8,
+          backgroundColor: "#3535d5",
+          borderRadius: 6,
           padding: "5px 12px",
         }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: "#6d28d9" }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#ebebdf" }}>
             {balance !== null ? `${balance} XLM` : "···"}
           </span>
         </div>
 
-        {/* Address */}
         <div style={{
           fontSize: 13,
-          color: "#64748b",
+          color: "#888880",
           fontFamily: "monospace",
-          backgroundColor: "#f1f5f9",
+          backgroundColor: "#1f1f1d",
           padding: "5px 10px",
-          borderRadius: 8,
+          borderRadius: 6,
         }}>
           {truncate(address)}
         </div>
 
-        {/* Disconnect */}
         <button
           onClick={disconnect}
           style={{
             fontSize: 13,
-            fontWeight: 500,
+            fontWeight: 600,
             padding: "5px 12px",
-            borderRadius: 8,
-            border: "1.5px solid #e2e8f0",
-            backgroundColor: "#fff",
-            color: "#475569",
+            borderRadius: 6,
+            border: "1.5px solid #333330",
+            backgroundColor: "transparent",
+            color: "#888880",
             cursor: "pointer",
           }}
         >
@@ -64,12 +61,12 @@ export default function WalletConnect() {
       disabled={connecting}
       style={{
         fontSize: 14,
-        fontWeight: 600,
+        fontWeight: 700,
         padding: "8px 18px",
-        borderRadius: 8,
+        borderRadius: 6,
         border: "none",
-        backgroundColor: connecting ? "#818cf8" : "#4f46e5",
-        color: "#fff",
+        backgroundColor: connecting ? "#a8c700" : "#c9ee00",
+        color: "#0a0a0a",
         cursor: connecting ? "not-allowed" : "pointer",
         transition: "background-color 0.15s",
       }}

@@ -27,11 +27,17 @@ export default function MobileNav() {
         aria-label="Menu"
       >
         {[0, 1, 2].map((i) => (
-          <span key={i} style={{ display: "block", width: 24, height: 2, backgroundColor: "#475569", borderRadius: 2, transition: "all 0.2s",
+          <span key={i} style={{
+            display: "block",
+            width: 24,
+            height: 2,
+            backgroundColor: "#888880",
+            borderRadius: 2,
+            transition: "all 0.2s",
             transform: open
               ? i === 0 ? "rotate(45deg) translate(5px, 5px)"
-              : i === 1 ? "opacity: 0; scaleX(0)"
-              : "rotate(-45deg) translate(5px, -5px)"
+              : i === 2 ? "rotate(-45deg) translate(5px, -5px)"
+              : "none"
               : "none",
             opacity: open && i === 1 ? 0 : 1,
           }} />
@@ -44,7 +50,7 @@ export default function MobileNav() {
           {/* Backdrop */}
           <div
             onClick={() => setOpen(false)}
-            style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.2)", zIndex: 40 }}
+            style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", zIndex: 40 }}
           />
           {/* Menu */}
           <div style={{
@@ -52,11 +58,11 @@ export default function MobileNav() {
             top: 64,
             left: 0,
             right: 0,
-            backgroundColor: "#fff",
-            borderBottom: "1px solid #e2e8f0",
+            backgroundColor: "#0a0a0a",
+            borderBottom: "1px solid #222220",
             zIndex: 50,
             padding: "8px 0 16px",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
           }}>
             {/* Nav links */}
             {NAV_LINKS.map(({ href, label }) => (
@@ -64,30 +70,30 @@ export default function MobileNav() {
                 key={href}
                 href={href}
                 onClick={() => setOpen(false)}
-                style={{ display: "block", padding: "13px 24px", fontSize: 15, fontWeight: 600, color: "#1e293b", textDecoration: "none" }}
+                style={{ display: "block", padding: "13px 24px", fontSize: 15, fontWeight: 600, color: "#ebebdf", textDecoration: "none" }}
               >
                 {label}
               </Link>
             ))}
 
             {/* Divider */}
-            <div style={{ height: 1, backgroundColor: "#f1f5f9", margin: "8px 24px" }} />
+            <div style={{ height: 1, backgroundColor: "#222220", margin: "8px 24px" }} />
 
             {/* Wallet section */}
             <div style={{ padding: "8px 24px" }}>
               {address ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: 13, color: "#64748b", fontFamily: "monospace" }}>{truncate(address)}</span>
+                    <span style={{ fontSize: 13, color: "#888880", fontFamily: "monospace" }}>{truncate(address)}</span>
                     {balance && (
-                      <span style={{ fontSize: 13, fontWeight: 700, color: "#6d28d9", backgroundColor: "#ede9fe", padding: "3px 10px", borderRadius: 6 }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: "#ebebdf", backgroundColor: "#3535d5", padding: "3px 10px", borderRadius: 6 }}>
                         {balance} XLM
                       </span>
                     )}
                   </div>
                   <button
                     onClick={() => { disconnect(); setOpen(false); }}
-                    style={{ padding: "10px", borderRadius: 8, border: "1.5px solid #e2e8f0", backgroundColor: "#fff", color: "#475569", fontWeight: 600, fontSize: 14, cursor: "pointer", textAlign: "center" }}
+                    style={{ padding: "10px", borderRadius: 8, border: "1px solid #333330", backgroundColor: "transparent", color: "#888880", fontWeight: 600, fontSize: 14, cursor: "pointer", textAlign: "center" }}
                   >
                     Disconnect
                   </button>
@@ -95,7 +101,7 @@ export default function MobileNav() {
               ) : (
                 <button
                   onClick={() => { connect(); setOpen(false); }}
-                  style={{ width: "100%", padding: "12px", borderRadius: 8, border: "none", backgroundColor: "#4f46e5", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}
+                  style={{ width: "100%", padding: "12px", borderRadius: 8, border: "none", backgroundColor: "#c9ee00", color: "#0a0a0a", fontWeight: 700, fontSize: 14, cursor: "pointer" }}
                 >
                   Connect Freighter
                 </button>

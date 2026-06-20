@@ -10,6 +10,17 @@ const ALL_STATUSES: BountyStatus[] = [
   "Open", "Funded", "Submitted", "Approved", "Disputed", "Resolved", "Cancelled",
 ];
 
+const FILTER_COLORS: Record<string, { accent: string; text: string }> = {
+  All:       { accent: "#c9ee00", text: "#0a0a0a" },
+  Open:      { accent: "#ebebdf", text: "#0a0a0a" },
+  Funded:    { accent: "#3535d5", text: "#ebebdf" },
+  Submitted: { accent: "#e53a0d", text: "#ebebdf" },
+  Approved:  { accent: "#c9ee00", text: "#0a0a0a" },
+  Disputed:  { accent: "#e53a0d", text: "#ebebdf" },
+  Resolved:  { accent: "#e03a7a", text: "#ebebdf" },
+  Cancelled: { accent: "#555550", text: "#ebebdf" },
+};
+
 type SortKey = "newest" | "oldest" | "highest" | "lowest";
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
@@ -51,19 +62,52 @@ export default function BountyBoardPage() {
   return (
     <div style={{ backgroundColor: "#0a0a0a", minHeight: "100%" }}>
       {/* Page header */}
-      <div style={{ borderBottom: "1px solid #222220", padding: "24px 24px 0" }}>
+      <div style={{ borderBottom: "1px solid #222220", padding: "28px 24px 0" }}>
         <div style={{ maxWidth: 1152, margin: "0 auto" }}>
-          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, marginBottom: 20, flexWrap: "wrap" }}>
+
+          {/* Title row */}
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 18, flexWrap: "wrap" }}>
             <div>
-              <h1 style={{ fontSize: 22, fontWeight: 800, color: "#ebebdf", margin: 0, letterSpacing: "-0.03em" }}>
+              <h1 style={{ fontSize: 28, fontWeight: 800, color: "#ebebdf", margin: 0, letterSpacing: "-0.04em" }}>
                 Open Bounties
               </h1>
-              {!loading && (
-                <p style={{ fontSize: 13, color: "#444440", margin: "4px 0 0 0" }}>
-                  {bounties.length} {bounties.length === 1 ? "bounty" : "bounties"} on-chain
-                </p>
+
+              {/* Colored status breakdown */}
+              {!loading && bounties.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginTop: 10 }}>
+                  {ALL_STATUSES.map(s => {
+                    const count = bounties.filter(b => b.status === s).length;
+                    if (count === 0) return null;
+                    return (
+                      <button
+                        key={s}
+                        onClick={() => setFilter(s)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 5,
+                          fontSize: 12,
+                          color: "#666660",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          padding: 0,
+                          fontFamily: "inherit",
+                        }}
+                      >
+                        <span style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: FILTER_COLORS[s]?.accent ?? "#666660", flexShrink: 0 }} />
+                        <span style={{ fontWeight: 700, color: "#888880" }}>{count}</span>
+                        <span>{s}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {!loading && bounties.length === 0 && (
+                <p style={{ fontSize: 13, color: "#444440", margin: "6px 0 0 0" }}>No bounties on-chain yet.</p>
               )}
             </div>
+
             <Link href="/create" style={{
               display: "inline-block",
               padding: "9px 18px",
@@ -74,6 +118,7 @@ export default function BountyBoardPage() {
               fontSize: 14,
               textDecoration: "none",
               letterSpacing: "-0.01em",
+              flexShrink: 0,
             }}>
               Post Bounty
             </Link>
@@ -121,26 +166,42 @@ export default function BountyBoardPage() {
 
           {/* Status filters */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-            {(["All", ...ALL_STATUSES] as const).map((s) => (
-              <button
-                key={s}
-                onClick={() => setFilter(s)}
-                style={{
-                  padding: "5px 14px",
-                  borderRadius: 4,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  letterSpacing: "0.02em",
-                  border: filter === s ? "none" : "1px solid #222220",
-                  backgroundColor: filter === s ? "#c9ee00" : "transparent",
-                  color: filter === s ? "#0a0a0a" : "#666660",
-                  cursor: "pointer",
-                  transition: "all 0.12s",
-                }}
-              >
-                {s}
-              </button>
-            ))}
+            {(["All", ...ALL_STATUSES] as const).map((s) => {
+              const isActive = filter === s;
+              const fc = FILTER_COLORS[s];
+              return (
+                <button
+                  key={s}
+                  onClick={() => setFilter(s)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 5,
+                    padding: "5px 12px",
+                    borderRadius: 4,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    letterSpacing: "0.02em",
+                    border: isActive ? "none" : "1px solid #222220",
+                    backgroundColor: isActive ? fc?.accent ?? "#c9ee00" : "transparent",
+                    color: isActive ? fc?.text ?? "#0a0a0a" : "#666660",
+                    cursor: "pointer",
+                    transition: "all 0.12s",
+                  }}
+                >
+                  {s !== "All" && (
+                    <span style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      backgroundColor: isActive ? (fc?.text ?? "#0a0a0a") : (fc?.accent ?? "#666660"),
+                      flexShrink: 0,
+                    }} />
+                  )}
+                  {s}
+                </button>
+              );
+            })}
           </div>
 
           {/* Results count when filtered */}

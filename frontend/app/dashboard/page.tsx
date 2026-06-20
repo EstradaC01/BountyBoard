@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import type { Bounty } from "@/types/bounty";
 import { getAllBounties } from "@/lib/contract";
 import { useWallet } from "@/context/WalletContext";
+import { useModal } from "@/context/ModalContext";
 import BountyCard from "@/components/BountyCard";
 
 type Role = "client" | "freelancer" | "arbiter";
@@ -42,6 +42,7 @@ function getPendingActions(bounties: Bounty[], address: string): PendingAction[]
 
 export default function DashboardPage() {
   const { address, connect } = useWallet();
+  const { openBounty, openCreate } = useModal();
   const [bounties, setBounties] = useState<Bounty[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeRole, setActiveRole] = useState<Role>("client");
@@ -93,8 +94,10 @@ export default function DashboardPage() {
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {pendingActions.map(({ bounty, message, urgency }) => (
-              <Link key={bounty.id} href={`/bounty/${bounty.id}`} style={{ textDecoration: "none" }}>
-                <div style={{
+              <div
+                key={bounty.id}
+                onClick={() => openBounty(bounty.id)}
+                style={{
                   display: "flex",
                   alignItems: "center",
                   gap: 14,
@@ -105,14 +108,13 @@ export default function DashboardPage() {
                   cursor: "pointer",
                   transition: "opacity 0.15s",
                 }}
-                  onMouseEnter={e => (e.currentTarget.style.opacity = "0.85")}
-                  onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
-                >
-                  <span style={{ fontSize: 18, flexShrink: 0 }}>{urgency === "high" ? "🔴" : "🔵"}</span>
-                  <p style={{ fontSize: 13, fontWeight: 500, color: "#ebebdf", margin: 0, flex: 1 }}>{message}</p>
-                  <span style={{ fontSize: 12, color: "#c9ee00", fontWeight: 700, flexShrink: 0 }}>View →</span>
-                </div>
-              </Link>
+                onMouseEnter={e => (e.currentTarget.style.opacity = "0.85")}
+                onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
+              >
+                <span style={{ fontSize: 18, flexShrink: 0 }}>{urgency === "high" ? "🔴" : "🔵"}</span>
+                <p style={{ fontSize: 13, fontWeight: 500, color: "#ebebdf", margin: 0, flex: 1 }}>{message}</p>
+                <span style={{ fontSize: 12, color: "#c9ee00", fontWeight: 700, flexShrink: 0 }}>View →</span>
+              </div>
             ))}
           </div>
         </div>
@@ -159,9 +161,12 @@ export default function DashboardPage() {
             No bounties as {activeRole}.
           </p>
           {activeRole === "client" && (
-            <Link href="/create" style={{ color: "#c9ee00", textDecoration: "none", fontSize: 14, fontWeight: 600 }}>
+            <button
+              onClick={openCreate}
+              style={{ color: "#c9ee00", background: "none", border: "none", fontWeight: 600, fontSize: 14, cursor: "pointer", fontFamily: "inherit", padding: 0 }}
+            >
               Post your first bounty
-            </Link>
+            </button>
           )}
         </div>
       ) : (

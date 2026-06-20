@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import Link from "next/link";
 import type { Bounty, BountyStatus } from "@/types/bounty";
 import { getAllBounties } from "@/lib/contract";
 import BountyCard from "@/components/BountyCard";
+import { useModal } from "@/context/ModalContext";
 
 const ALL_STATUSES: BountyStatus[] = [
   "Open", "Funded", "Submitted", "Approved", "Disputed", "Resolved", "Cancelled",
@@ -31,6 +31,7 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
 ];
 
 export default function BountyBoardPage() {
+  const { openCreate } = useModal();
   const [bounties, setBounties] = useState<Bounty[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<BountyStatus | "All">("All");
@@ -61,7 +62,6 @@ export default function BountyBoardPage() {
 
   return (
     <div style={{ backgroundColor: "#0a0a0a", minHeight: "100%" }}>
-      {/* Page header */}
       <div style={{ borderBottom: "1px solid #222220", padding: "28px 24px 0" }}>
         <div style={{ maxWidth: 1152, margin: "0 auto" }}>
 
@@ -83,16 +83,10 @@ export default function BountyBoardPage() {
                         key={s}
                         onClick={() => setFilter(s)}
                         style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 5,
-                          fontSize: 12,
-                          color: "#666660",
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          padding: 0,
-                          fontFamily: "inherit",
+                          display: "flex", alignItems: "center", gap: 5,
+                          fontSize: 12, color: "#666660",
+                          background: "none", border: "none", cursor: "pointer",
+                          padding: 0, fontFamily: "inherit",
                         }}
                       >
                         <span style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: FILTER_COLORS[s]?.accent ?? "#666660", flexShrink: 0 }} />
@@ -108,20 +102,24 @@ export default function BountyBoardPage() {
               )}
             </div>
 
-            <Link href="/create" style={{
-              display: "inline-block",
-              padding: "9px 18px",
-              backgroundColor: "#c9ee00",
-              color: "#0a0a0a",
-              borderRadius: 6,
-              fontWeight: 700,
-              fontSize: 14,
-              textDecoration: "none",
-              letterSpacing: "-0.01em",
-              flexShrink: 0,
-            }}>
+            <button
+              onClick={openCreate}
+              style={{
+                padding: "9px 18px",
+                backgroundColor: "#c9ee00",
+                color: "#0a0a0a",
+                borderRadius: 6,
+                fontWeight: 700,
+                fontSize: 14,
+                border: "none",
+                cursor: "pointer",
+                letterSpacing: "-0.01em",
+                flexShrink: 0,
+                fontFamily: "inherit",
+              }}
+            >
               Post Bounty
-            </Link>
+            </button>
           </div>
 
           {/* Search + Sort */}
@@ -132,30 +130,18 @@ export default function BountyBoardPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               style={{
-                flex: 1,
-                minWidth: 200,
-                padding: "9px 14px",
-                borderRadius: 6,
-                border: "1px solid #222220",
-                fontSize: 14,
-                color: "#ebebdf",
-                backgroundColor: "#141414",
-                outline: "none",
-                fontFamily: "inherit",
+                flex: 1, minWidth: 200, padding: "9px 14px", borderRadius: 6,
+                border: "1px solid #222220", fontSize: 14, color: "#ebebdf",
+                backgroundColor: "#141414", outline: "none", fontFamily: "inherit",
               }}
             />
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value as SortKey)}
               style={{
-                padding: "9px 14px",
-                borderRadius: 6,
-                border: "1px solid #222220",
-                fontSize: 14,
-                color: "#888880",
-                backgroundColor: "#141414",
-                cursor: "pointer",
-                fontFamily: "inherit",
+                padding: "9px 14px", borderRadius: 6, border: "1px solid #222220",
+                fontSize: 14, color: "#888880", backgroundColor: "#141414",
+                cursor: "pointer", fontFamily: "inherit",
               }}
             >
               {SORT_OPTIONS.map((o) => (
@@ -174,28 +160,20 @@ export default function BountyBoardPage() {
                   key={s}
                   onClick={() => setFilter(s)}
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 5,
-                    padding: "5px 12px",
-                    borderRadius: 4,
-                    fontSize: 12,
-                    fontWeight: 700,
-                    letterSpacing: "0.02em",
+                    display: "flex", alignItems: "center", gap: 5,
+                    padding: "5px 12px", borderRadius: 4,
+                    fontSize: 12, fontWeight: 700, letterSpacing: "0.02em",
                     border: isActive ? "none" : "1px solid #222220",
-                    backgroundColor: isActive ? fc?.accent ?? "#c9ee00" : "transparent",
-                    color: isActive ? fc?.text ?? "#0a0a0a" : "#666660",
-                    cursor: "pointer",
-                    transition: "all 0.12s",
+                    backgroundColor: isActive ? (fc?.accent ?? "#c9ee00") : "transparent",
+                    color: isActive ? (fc?.text ?? "#0a0a0a") : "#666660",
+                    cursor: "pointer", transition: "all 0.12s",
+                    fontFamily: "inherit",
                   }}
                 >
                   {s !== "All" && (
                     <span style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: "50%",
+                      width: 6, height: 6, borderRadius: "50%", flexShrink: 0,
                       backgroundColor: isActive ? (fc?.text ?? "#0a0a0a") : (fc?.accent ?? "#666660"),
-                      flexShrink: 0,
                     }} />
                   )}
                   {s}
@@ -204,7 +182,6 @@ export default function BountyBoardPage() {
             })}
           </div>
 
-          {/* Results count when filtered */}
           {!loading && (filter !== "All" || search) && (
             <p style={{ fontSize: 12, color: "#444440", margin: "12px 0 0 0" }}>
               {visible.length} {visible.length === 1 ? "result" : "results"}
@@ -226,7 +203,12 @@ export default function BountyBoardPage() {
             <p style={{ fontSize: 16, fontWeight: 600, color: "#444440", marginBottom: 8 }}>No bounties here.</p>
             <p style={{ fontSize: 14, color: "#333330" }}>
               {search ? `Nothing matches "${search}" — ` : filter !== "All" ? "Try a different filter, or " : ""}
-              <Link href="/create" style={{ color: "#c9ee00", textDecoration: "none", fontWeight: 600 }}>post one</Link>.
+              <button
+                onClick={openCreate}
+                style={{ color: "#c9ee00", background: "none", border: "none", fontWeight: 600, cursor: "pointer", fontSize: 14, fontFamily: "inherit", padding: 0 }}
+              >
+                post one
+              </button>.
             </p>
           </div>
         ) : (

@@ -3,10 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useWallet } from "@/context/WalletContext";
+import { useModal } from "@/context/ModalContext";
 
 const NAV_LINKS = [
   { href: "/", label: "Browse" },
-  { href: "/create", label: "Post Bounty" },
   { href: "/dashboard", label: "My Bounties" },
 ];
 
@@ -17,6 +17,7 @@ function truncate(addr: string) {
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
   const { address, balance, connect, disconnect } = useWallet();
+  const { openCreate } = useModal();
 
   return (
     <>
@@ -44,15 +45,12 @@ export default function MobileNav() {
         ))}
       </button>
 
-      {/* Dropdown drawer */}
       {open && (
         <>
-          {/* Backdrop */}
           <div
             onClick={() => setOpen(false)}
             style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", zIndex: 40 }}
           />
-          {/* Menu */}
           <div style={{
             position: "fixed",
             top: 64,
@@ -64,7 +62,6 @@ export default function MobileNav() {
             padding: "8px 0 16px",
             boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
           }}>
-            {/* Nav links */}
             {NAV_LINKS.map(({ href, label }) => (
               <Link
                 key={href}
@@ -76,10 +73,20 @@ export default function MobileNav() {
               </Link>
             ))}
 
-            {/* Divider */}
+            <button
+              onClick={() => { setOpen(false); openCreate(); }}
+              style={{
+                display: "block", width: "100%", padding: "13px 24px",
+                fontSize: 15, fontWeight: 600, color: "#ebebdf",
+                background: "none", border: "none", cursor: "pointer",
+                fontFamily: "inherit", textAlign: "left",
+              }}
+            >
+              Post Bounty
+            </button>
+
             <div style={{ height: 1, backgroundColor: "#222220", margin: "8px 24px" }} />
 
-            {/* Wallet section */}
             <div style={{ padding: "8px 24px" }}>
               {address ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -93,7 +100,7 @@ export default function MobileNav() {
                   </div>
                   <button
                     onClick={() => { disconnect(); setOpen(false); }}
-                    style={{ padding: "10px", borderRadius: 8, border: "1px solid #333330", backgroundColor: "transparent", color: "#888880", fontWeight: 600, fontSize: 14, cursor: "pointer", textAlign: "center" }}
+                    style={{ padding: "10px", borderRadius: 8, border: "1px solid #333330", backgroundColor: "transparent", color: "#888880", fontWeight: 600, fontSize: 14, cursor: "pointer", textAlign: "center", fontFamily: "inherit" }}
                   >
                     Disconnect
                   </button>
@@ -101,7 +108,7 @@ export default function MobileNav() {
               ) : (
                 <button
                   onClick={() => { connect(); setOpen(false); }}
-                  style={{ width: "100%", padding: "12px", borderRadius: 8, border: "none", backgroundColor: "#c9ee00", color: "#0a0a0a", fontWeight: 700, fontSize: 14, cursor: "pointer" }}
+                  style={{ width: "100%", padding: "12px", borderRadius: 8, border: "none", backgroundColor: "#c9ee00", color: "#0a0a0a", fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}
                 >
                   Connect Freighter
                 </button>

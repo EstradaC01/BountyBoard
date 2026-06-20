@@ -3,35 +3,85 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useWallet } from "@/context/WalletContext";
+import { useToast } from "@/context/ToastContext";
 import { createBounty } from "@/lib/contract";
 import { xlmToStroops } from "@/lib/stellar";
+import * as StellarSdk from "@stellar/stellar-sdk";
 
-// XLM SAC address on testnet
 const XLM_TOKEN = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
+
+function isValidStellarAddress(addr: string): boolean {
+  try {
+    StellarSdk.Keypair.fromPublicKey(addr);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+interface FieldErrors {
+  description?: string;
+  amount?: string;
+  freelancer?: string;
+  arbiter?: string;
+}
 
 export default function CreateBountyPage() {
   const { address, connect } = useWallet();
+  const { showToast, dismissToast } = useToast();
   const router = useRouter();
 
-  const [form, setForm] = useState({
-    freelancer: "",
-    arbiter: "",
-    amount: "",
-    description: "",
-  });
+  const [form, setForm] = useState({ freelancer: "", arbiter: "", amount: "", description: "" });
+  const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   function set(field: keyof typeof form) {
-    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       setForm((f) => ({ ...f, [field]: e.target.value }));
+      // Clear error on change
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
+    };
+  }
+
+  function validate(): boolean {
+    const next: FieldErrors = {};
+
+    if (!form.description.trim()) {
+      next.description = "Description is required.";
+    }
+
+    const amt = parseFloat(form.amount);
+    if (!form.amount || isNaN(amt) || amt <= 0) {
+      next.amount = "Enter a valid amount greater than 0.";
+    }
+
+    if (!form.freelancer.trim()) {
+      next.freelancer = "Freelancer address is required.";
+    } else if (!isValidStellarAddress(form.freelancer.trim())) {
+      next.freelancer = "Not a valid Stellar address (must start with G and be 56 chars).";
+    } else if (form.freelancer.trim() === address) {
+      next.freelancer = "Freelancer can't be the same as the client (you).";
+    }
+
+    if (!form.arbiter.trim()) {
+      next.arbiter = "Arbiter address is required.";
+    } else if (!isValidStellarAddress(form.arbiter.trim())) {
+      next.arbiter = "Not a valid Stellar address (must start with G and be 56 chars).";
+    } else if (form.arbiter.trim() === address) {
+      next.arbiter = "Arbiter can't be the same as the client (you).";
+    } else if (form.arbiter.trim() === form.freelancer.trim()) {
+      next.arbiter = "Arbiter and freelancer can't be the same address.";
+    }
+
+    setErrors(next);
+    return Object.keys(next).length === 0;
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!address) return;
+    if (!address || !validate()) return;
     setSubmitting(true);
-    setError(null);
+    const toastId = showToast("Creating bounty… Waiting for Freighter.", "loading");
     try {
       await createBounty(address, {
         freelancer: form.freelancer.trim(),
@@ -40,99 +90,154 @@ export default function CreateBountyPage() {
         amount: xlmToStroops(form.amount),
         description: form.description.trim(),
       });
+      dismissToast(toastId);
+      showToast("Bounty created! Fund it to lock in escrow.", "success");
       router.push("/dashboard");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to create bounty");
+    } catch (err) {
+      dismissToast(toastId);
+      showToast(err instanceof Error ? err.message : "Failed to create bounty", "error");
     } finally {
       setSubmitting(false);
     }
   }
 
-  const inputClass =
-    "w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 font-mono";
-  const labelClass = "block text-sm font-medium text-slate-700 mb-1";
+  const inputStyle = (hasError: boolean): React.CSSProperties => ({
+    width: "100%",
+    padding: "10px 12px",
+    borderRadius: 8,
+    border: `1.5px solid ${hasError ? "#fca5a5" : "#e2e8f0"}`,
+    fontSize: 14,
+    color: "#1e293b",
+    backgroundColor: hasError ? "#fff5f5" : "#fff",
+    fontFamily: "monospace",
+    outline: "none",
+    boxSizing: "border-box",
+  });
+
+  const labelStyle: React.CSSProperties = {
+    display: "block",
+    fontSize: 13,
+    fontWeight: 600,
+    color: "#475569",
+    marginBottom: 6,
+  };
+
+  const errorStyle: React.CSSProperties = {
+    fontSize: 12,
+    color: "#dc2626",
+    marginTop: 4,
+  };
 
   return (
-    <div className="max-w-xl mx-auto px-4 py-10">
-      <h1 className="text-2xl font-bold text-slate-900 mb-1">Post a Bounty</h1>
-      <p className="text-slate-500 text-sm mb-8">
+    <div style={{ maxWidth: 560, margin: "0 auto", padding: "40px 24px" }}>
+      <h1 style={{ fontSize: 24, fontWeight: 800, color: "#1e293b", margin: "0 0 4px 0" }}>Post a Bounty</h1>
+      <p style={{ fontSize: 14, color: "#64748b", margin: "0 0 32px 0" }}>
         Describe the work, set the XLM amount, and lock it in escrow.
       </p>
 
       {!address ? (
-        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-6 text-center">
-          <p className="text-slate-700 mb-4">Connect your Freighter wallet to post a bounty.</p>
+        <div style={{ backgroundColor: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 12, padding: 32, textAlign: "center" }}>
+          <p style={{ color: "#1d4ed8", marginBottom: 16, fontSize: 14 }}>Connect your Freighter wallet to post a bounty.</p>
           <button
             onClick={connect}
-            className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors"
+            style={{ padding: "10px 24px", backgroundColor: "#4f46e5", color: "#fff", borderRadius: 8, border: "none", fontWeight: 600, fontSize: 14, cursor: "pointer" }}
           >
             Connect Freighter
           </button>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-5 bg-white rounded-xl border border-slate-200 p-6">
+        <form onSubmit={handleSubmit} noValidate style={{ backgroundColor: "#fff", borderRadius: 14, border: "1.5px solid #e2e8f0", padding: 28, display: "flex", flexDirection: "column", gap: 20 }}>
+
+          {/* Description */}
           <div>
-            <label className={labelClass}>Description</label>
+            <label style={labelStyle}>Description</label>
             <textarea
-              required
               rows={3}
               placeholder="e.g. Design a logo for my startup"
               value={form.description}
               onChange={set("description")}
-              className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
+              style={{ ...inputStyle(!!errors.description), fontFamily: "inherit", resize: "none" }}
             />
+            {errors.description && <p style={errorStyle}>⚠ {errors.description}</p>}
           </div>
 
+          {/* Amount */}
           <div>
-            <label className={labelClass}>Amount (XLM)</label>
-            <input
-              required
-              type="number"
-              min="0.0000001"
-              step="any"
-              placeholder="e.g. 100"
-              value={form.amount}
-              onChange={set("amount")}
-              className={inputClass}
-            />
+            <label style={labelStyle}>Amount (XLM)</label>
+            <div style={{ position: "relative" }}>
+              <input
+                type="number"
+                min="0.0000001"
+                step="any"
+                placeholder="e.g. 100"
+                value={form.amount}
+                onChange={set("amount")}
+                style={{ ...inputStyle(!!errors.amount), paddingRight: 48 }}
+              />
+              <span style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", fontSize: 13, fontWeight: 600, color: "#818cf8", fontFamily: "sans-serif" }}>
+                XLM
+              </span>
+            </div>
+            {errors.amount && <p style={errorStyle}>⚠ {errors.amount}</p>}
           </div>
 
+          {/* Freelancer */}
           <div>
-            <label className={labelClass}>Freelancer Address</label>
+            <label style={labelStyle}>Freelancer Address</label>
             <input
-              required
               type="text"
-              placeholder="G..."
+              placeholder="G... (56 character Stellar address)"
               value={form.freelancer}
               onChange={set("freelancer")}
-              className={inputClass}
+              style={inputStyle(!!errors.freelancer)}
             />
+            {errors.freelancer
+              ? <p style={errorStyle}>⚠ {errors.freelancer}</p>
+              : form.freelancer && isValidStellarAddress(form.freelancer)
+                ? <p style={{ fontSize: 12, color: "#16a34a", marginTop: 4 }}>✓ Valid address</p>
+                : null
+            }
           </div>
 
+          {/* Arbiter */}
           <div>
-            <label className={labelClass}>Arbiter Address</label>
+            <label style={labelStyle}>Arbiter Address</label>
             <input
-              required
               type="text"
               placeholder="G... (neutral third party for disputes)"
               value={form.arbiter}
               onChange={set("arbiter")}
-              className={inputClass}
+              style={inputStyle(!!errors.arbiter)}
             />
+            {errors.arbiter
+              ? <p style={errorStyle}>⚠ {errors.arbiter}</p>
+              : form.arbiter && isValidStellarAddress(form.arbiter)
+                ? <p style={{ fontSize: 12, color: "#16a34a", marginTop: 4 }}>✓ Valid address</p>
+                : null
+            }
+            <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 6 }}>
+              A trusted person both parties agree on — settles disputes if client and freelancer disagree.
+            </p>
           </div>
 
-          {error && (
-            <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
-          )}
-
-          <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-            <p className="text-xs text-slate-400">
-              Posting as <span className="font-mono">{address.slice(0, 6)}…{address.slice(-4)}</span>
+          {/* Footer */}
+          <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: 16, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <p style={{ fontSize: 12, color: "#94a3b8" }}>
+              Posting as <span style={{ fontFamily: "monospace" }}>{address.slice(0, 6)}…{address.slice(-4)}</span>
             </p>
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-60"
+              style={{
+                padding: "10px 24px",
+                backgroundColor: submitting ? "#818cf8" : "#4f46e5",
+                color: "#fff",
+                borderRadius: 8,
+                border: "none",
+                fontWeight: 700,
+                fontSize: 14,
+                cursor: submitting ? "not-allowed" : "pointer",
+              }}
             >
               {submitting ? "Creating…" : "Create Bounty"}
             </button>

@@ -9,6 +9,7 @@ import { useWallet } from "@/context/WalletContext";
 import { useToast } from "@/context/ToastContext";
 import BountyStatusBadge from "@/components/BountyStatusBadge";
 import ActionButtons from "@/components/ActionButtons";
+import SkeletonCard from "@/components/SkeletonCard";
 
 function truncate(addr: string) {
   return `${addr.slice(0, 8)}…${addr.slice(-6)}`;
@@ -47,10 +48,13 @@ export default function BountyDetailPage({ params }: { params: Promise<{ id: str
 
   if (loading) {
     return (
-      <div style={{ maxWidth: 720, margin: "0 auto", padding: "40px 24px" }}>
-        {[200, "100%", "75%"].map((w, i) => (
-          <div key={i} style={{ height: i === 0 ? 28 : 16, backgroundColor: "#e2e8f0", borderRadius: 6, marginBottom: 12, width: w, opacity: 0.6 }} />
-        ))}
+      <div style={{ maxWidth: 720, margin: "0 auto", padding: "32px 24px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
+          <div style={{ width: 100, height: 16, backgroundColor: "#e2e8f0", borderRadius: 6 }} />
+          <div style={{ width: 80, height: 16, backgroundColor: "#e2e8f0", borderRadius: 6 }} />
+        </div>
+        <SkeletonCard />
+        <div style={{ backgroundColor: "#fff", borderRadius: 14, border: "1.5px solid #e2e8f0", padding: 24, height: 80, opacity: 0.5 }} />
       </div>
     );
   }

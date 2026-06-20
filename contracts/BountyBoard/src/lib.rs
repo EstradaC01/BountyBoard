@@ -1,41 +1,20 @@
-#![no_std]
-//! BountyBoard — a crypto escrow / bounty board on Stellar ("Fiverr for freelancers").
-//!
-//! A *client* posts a paid bounty and funds it with XLM, which the contract holds in
-//! escrow. The *freelancer* submits work; on the client's approval the escrowed funds are
-//! released to the freelancer. If the two disagree, either party can raise a dispute and a
-//! neutral *arbiter* (chosen at creation time) decides whether to pay the freelancer or
-//! refund the client.
-//!
-//! Funds are moved with the Stellar Asset Contract (SAC) token interface, so the same
-//! contract works with native XLM or any other Stellar asset address.
-
+﻿#![no_std]
 use soroban_sdk::{
-    contract, contracterror, contractimpl, contracttype, token, Address, Env, String,
+    contract, contracterror, contractimpl, contracttype, token, vec, Address, Env, String, Vec,
 };
 
-/// Lifecycle of a single bounty. The contract enforces the allowed transitions:
-/// Open -> Funded -> Submitted -> Approved, with Disputed/Resolved and Cancelled branches.
 #[contracttype]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Status {
-    /// Created but not yet funded.
     Open,
-    /// Client has deposited the escrow amount.
     Funded,
-    /// Freelancer has marked the work as delivered.
     Submitted,
-    /// Client approved; funds released to the freelancer (terminal).
     Approved,
-    /// A party raised a dispute; awaiting the arbiter.
     Disputed,
-    /// Arbiter settled the dispute; funds paid out or refunded (terminal).
     Resolved,
-    /// Cancelled before funding (terminal).
     Cancelled,
 }
 
-/// A single escrow agreement between a client and a freelancer.
 #[contracttype]
 #[derive(Clone)]
 pub struct Bounty {
@@ -43,24 +22,21 @@ pub struct Bounty {
     pub client: Address,
     pub freelancer: Address,
     pub arbiter: Address,
-    /// Token (asset) used for payment, e.g. the native XLM SAC address.
     pub token: Address,
     pub amount: i128,
     pub description: String,
     pub status: Status,
+    pub work_proof: String,
 }
 
-/// Storage keys.
 #[contracttype]
 pub enum DataKey {
-    /// Monotonic counter for the next bounty id (instance storage).
     Counter,
-    /// A bounty keyed by its id (persistent storage).
     Bounty(u64),
+    /// List of applicant addresses for a bounty.
+    Applicants(u64),
 }
 
-/// Contract errors. Returned (not panicked) so callers — and tests via `try_*` — can
-/// distinguish failure reasons cleanly.
 #[contracterror]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 #[repr(u32)]
@@ -70,6 +46,8 @@ pub enum Error {
     AlreadyFunded = 3,
     Unauthorized = 4,
     InvalidAmount = 5,
+    AlreadyApplied = 6,
+    ApplicantNotFound = 7,
 }
 
 #[contract]
@@ -77,8 +55,6 @@ pub struct Contract;
 
 #[contractimpl]
 impl Contract {
-    /// Client posts a new bounty. No money moves yet — call `fund` next.
-    /// Requires the client's authorization and a positive amount.
     pub fn create_bounty(
         env: Env,
         client: Address,
@@ -93,7 +69,6 @@ impl Contract {
             return Err(Error::InvalidAmount);
         }
 
-        // Allocate the next id from the instance counter.
         let id: u64 = env
             .storage()
             .instance()
@@ -110,13 +85,12 @@ impl Contract {
             amount,
             description,
             status: Status::Open,
+            work_proof: String::from_str(&env, ""),
         };
         env.storage().persistent().set(&DataKey::Bounty(id), &bounty);
         Ok(id)
     }
 
-    /// Client deposits the escrow amount into the contract. Only valid while `Open`.
-    /// The token transfer requires the client's auth (handled inside the token contract).
     pub fn fund(env: Env, bounty_id: u64) -> Result<(), Error> {
         let mut bounty = Self::load(&env, bounty_id)?;
         bounty.client.require_auth();
@@ -126,7 +100,6 @@ impl Contract {
             _ => return Err(Error::InvalidStatus),
         }
 
-        // Move funds from the client into the contract's own custody balance.
         token::Client::new(&env, &bounty.token).transfer(
             &bounty.client,
             &env.current_contract_address(),
@@ -138,20 +111,85 @@ impl Contract {
         Ok(())
     }
 
-    /// Freelancer signals the work is delivered. Only valid while `Funded`.
-    pub fn submit_work(env: Env, bounty_id: u64) -> Result<(), Error> {
+    /// Any address can apply to an open bounty. Only valid while Open or Funded.
+    /// Prevents duplicate applications.
+    pub fn apply(env: Env, bounty_id: u64, applicant: Address) -> Result<(), Error> {
+        applicant.require_auth();
+        let bounty = Self::load(&env, bounty_id)?;
+        match bounty.status {
+            Status::Open | Status::Funded => {}
+            _ => return Err(Error::InvalidStatus),
+        }
+
+        let mut applicants: Vec<Address> = env
+            .storage()
+            .persistent()
+            .get(&DataKey::Applicants(bounty_id))
+            .unwrap_or_else(|| vec![&env]);
+
+        for a in applicants.iter() {
+            if a == applicant {
+                return Err(Error::AlreadyApplied);
+            }
+        }
+        applicants.push_back(applicant);
+        env.storage()
+            .persistent()
+            .set(&DataKey::Applicants(bounty_id), &applicants);
+        Ok(())
+    }
+
+    /// Client picks one of the applicants as the freelancer. Only valid while Open or Funded.
+    pub fn accept_applicant(env: Env, bounty_id: u64, applicant: Address) -> Result<(), Error> {
+        let mut bounty = Self::load(&env, bounty_id)?;
+        bounty.client.require_auth();
+        match bounty.status {
+            Status::Open | Status::Funded => {}
+            _ => return Err(Error::InvalidStatus),
+        }
+
+        let applicants: Vec<Address> = env
+            .storage()
+            .persistent()
+            .get(&DataKey::Applicants(bounty_id))
+            .unwrap_or_else(|| vec![&env]);
+
+        let mut found = false;
+        for a in applicants.iter() {
+            if a == applicant {
+                found = true;
+                break;
+            }
+        }
+        if !found {
+            return Err(Error::ApplicantNotFound);
+        }
+
+        bounty.freelancer = applicant;
+        Self::save(&env, &bounty);
+        Ok(())
+    }
+
+    /// Returns the list of applicants for a bounty.
+    pub fn get_applicants(env: Env, bounty_id: u64) -> Vec<Address> {
+        env.storage()
+            .persistent()
+            .get(&DataKey::Applicants(bounty_id))
+            .unwrap_or_else(|| vec![&env])
+    }
+
+    pub fn submit_work(env: Env, bounty_id: u64, work_proof: String) -> Result<(), Error> {
         let mut bounty = Self::load(&env, bounty_id)?;
         bounty.freelancer.require_auth();
         if bounty.status != Status::Funded {
             return Err(Error::InvalidStatus);
         }
+        bounty.work_proof = work_proof;
         bounty.status = Status::Submitted;
         Self::save(&env, &bounty);
         Ok(())
     }
 
-    /// Client approves the submitted work, releasing escrow to the freelancer.
-    /// Only valid while `Submitted`.
     pub fn approve(env: Env, bounty_id: u64) -> Result<(), Error> {
         let mut bounty = Self::load(&env, bounty_id)?;
         bounty.client.require_auth();
@@ -159,7 +197,6 @@ impl Contract {
             return Err(Error::InvalidStatus);
         }
 
-        // Pay out from the contract's custody balance to the freelancer.
         token::Client::new(&env, &bounty.token).transfer(
             &env.current_contract_address(),
             &bounty.freelancer,
@@ -171,8 +208,6 @@ impl Contract {
         Ok(())
     }
 
-    /// Either the client or the freelancer raises a dispute, freezing the bounty until the
-    /// arbiter resolves it. Only valid while `Funded` or `Submitted`.
     pub fn dispute(env: Env, bounty_id: u64, caller: Address) -> Result<(), Error> {
         let mut bounty = Self::load(&env, bounty_id)?;
         caller.require_auth();
@@ -188,13 +223,7 @@ impl Contract {
         Ok(())
     }
 
-    /// Arbiter settles a dispute: pay the freelancer (`pay_freelancer = true`) or refund the
-    /// client (`false`). Only valid while `Disputed`.
-    pub fn resolve_dispute(
-        env: Env,
-        bounty_id: u64,
-        pay_freelancer: bool,
-    ) -> Result<(), Error> {
+    pub fn resolve_dispute(env: Env, bounty_id: u64, pay_freelancer: bool) -> Result<(), Error> {
         let mut bounty = Self::load(&env, bounty_id)?;
         bounty.arbiter.require_auth();
         if bounty.status != Status::Disputed {
@@ -217,7 +246,6 @@ impl Contract {
         Ok(())
     }
 
-    /// Client cancels a bounty that was never funded. Only valid while `Open`.
     pub fn cancel(env: Env, bounty_id: u64) -> Result<(), Error> {
         let mut bounty = Self::load(&env, bounty_id)?;
         bounty.client.require_auth();
@@ -229,12 +257,9 @@ impl Contract {
         Ok(())
     }
 
-    /// Read a bounty by id.
     pub fn get_bounty(env: Env, bounty_id: u64) -> Result<Bounty, Error> {
         Self::load(&env, bounty_id)
     }
-
-    // --- internal helpers ---
 
     fn load(env: &Env, bounty_id: u64) -> Result<Bounty, Error> {
         env.storage()

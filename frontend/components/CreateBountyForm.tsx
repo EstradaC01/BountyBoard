@@ -1,23 +1,26 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useWallet } from "@/context/WalletContext";
 import { useToast } from "@/context/ToastContext";
 import { createBounty } from "@/lib/contract";
 import { xlmToStroops } from "@/lib/stellar";
-import * as StellarSdk from "@stellar/stellar-sdk";
 
 const XLM_TOKEN = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
 
-function isValidStellarAddress(addr: string): boolean {
-  try { StellarSdk.Keypair.fromPublicKey(addr); return true; }
-  catch { return false; }
-}
+const TRUSTED_ARBITERS = [
+  { label: "Arbiter Alpha", address: "GDT5V7OGJCZYYEK5NALO4BVLBWSWUCN4WDYJZBNNUVWYPPT3MV4LVILJ" },
+  { label: "Arbiter Beta",  address: "GDFQM676MVLC2WDNPKMXS7SMSSOJMF5UGADL4526VNTOCNIZISKAGHPH" },
+  { label: "Arbiter Gamma", address: "GCJ6Z6QY72FGHM7SJ5P2GG7G45DKWRJOPC36ORQTKHRD5BXWTFYJDMK5" },
+  { label: "Arbiter Delta", address: "GBPKL5Q26INSYUJ4UTNLMNIYEND6Z7MH34OJAYCUJ7HBXV2QUHLBBL57" },
+];
+
+// Placeholder freelancer -- replaced once apply/accept flow is live on-chain
+const PLACEHOLDER_FREELANCER = "GDT5V7OGJCZYYEK5NALO4BVLBWSWUCN4WDYJZBNNUVWYPPT3MV4LVILJ";
 
 interface FieldErrors {
   description?: string;
   amount?: string;
-  freelancer?: string;
   arbiter?: string;
 }
 
@@ -37,7 +40,11 @@ export default function CreateBountyForm({ onSuccess, onCancel }: Props) {
   const { address, connect } = useWallet();
   const { showToast, dismissToast } = useToast();
 
-  const [form, setForm] = useState({ freelancer: "", arbiter: "", amount: "", description: "" });
+  const [form, setForm] = useState({
+    description: "",
+    amount: "",
+    arbiter: TRUSTED_ARBITERS[0].address,
+  });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -47,12 +54,12 @@ export default function CreateBountyForm({ onSuccess, onCancel }: Props) {
       border: `1px solid ${hasError ? "#e53a0d" : "#222220"}`,
       fontSize: 14, color: "#ebebdf",
       backgroundColor: hasError ? "#150808" : "#0a0a0a",
-      fontFamily: "monospace", outline: "none", boxSizing: "border-box",
+      fontFamily: "inherit", outline: "none", boxSizing: "border-box",
     };
   }
 
-  function set(field: keyof typeof form) {
-    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  function setField(field: keyof typeof form) {
+    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
       setForm(f => ({ ...f, [field]: e.target.value }));
       setErrors(prev => ({ ...prev, [field]: undefined }));
     };
@@ -63,22 +70,7 @@ export default function CreateBountyForm({ onSuccess, onCancel }: Props) {
     if (!form.description.trim()) next.description = "Description is required.";
     const amt = parseFloat(form.amount);
     if (!form.amount || isNaN(amt) || amt <= 0) next.amount = "Enter a valid amount greater than 0.";
-    if (!form.freelancer.trim()) {
-      next.freelancer = "Freelancer address is required.";
-    } else if (!isValidStellarAddress(form.freelancer.trim())) {
-      next.freelancer = "Not a valid Stellar address (must start with G and be 56 chars).";
-    } else if (form.freelancer.trim() === address) {
-      next.freelancer = "Freelancer can't be the same as the client (you).";
-    }
-    if (!form.arbiter.trim()) {
-      next.arbiter = "Arbiter address is required.";
-    } else if (!isValidStellarAddress(form.arbiter.trim())) {
-      next.arbiter = "Not a valid Stellar address (must start with G and be 56 chars).";
-    } else if (form.arbiter.trim() === address) {
-      next.arbiter = "Arbiter can't be the same as the client (you).";
-    } else if (form.arbiter.trim() === form.freelancer.trim()) {
-      next.arbiter = "Arbiter and freelancer can't be the same address.";
-    }
+    if (!form.arbiter) next.arbiter = "Select a trusted arbiter.";
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -87,17 +79,17 @@ export default function CreateBountyForm({ onSuccess, onCancel }: Props) {
     e.preventDefault();
     if (!address || !validate()) return;
     setSubmitting(true);
-    const toastId = showToast("Creating bounty… Waiting for Freighter.", "loading");
+    const toastId = showToast("Creating bounty... Waiting for Freighter.", "loading");
     try {
       await createBounty(address, {
-        freelancer: form.freelancer.trim(),
-        arbiter: form.arbiter.trim(),
+        freelancer: PLACEHOLDER_FREELANCER,
+        arbiter: form.arbiter,
         token: XLM_TOKEN,
         amount: xlmToStroops(form.amount),
         description: form.description.trim(),
       });
       dismissToast(toastId);
-      showToast("Bounty created! Fund it to lock in escrow.", "success");
+      showToast("Bounty created! Fund it to open it for applicants.", "success");
       onSuccess();
     } catch (err) {
       dismissToast(toastId);
@@ -123,13 +115,15 @@ export default function CreateBountyForm({ onSuccess, onCancel }: Props) {
     );
   }
 
+  const selectedArbiter = TRUSTED_ARBITERS.find(a => a.address === form.arbiter);
+
   return (
     <div style={{ padding: "28px 24px" }}>
       <h2 style={{ fontSize: 20, fontWeight: 800, color: "#ebebdf", margin: "0 0 4px 0", letterSpacing: "-0.03em" }}>
         Post a Bounty
       </h2>
       <p style={{ fontSize: 14, color: "#444440", margin: "0 0 24px 0" }}>
-        Describe the work, set the XLM amount, and lock it in escrow.
+        Describe the work, set the XLM amount, and lock it in escrow. Anyone can apply once it&apos;s live.
       </p>
 
       <form onSubmit={handleSubmit} noValidate style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -139,10 +133,10 @@ export default function CreateBountyForm({ onSuccess, onCancel }: Props) {
             rows={3}
             placeholder="e.g. Design a logo for my startup"
             value={form.description}
-            onChange={set("description")}
+            onChange={setField("description")}
             style={{ ...inputStyle(!!errors.description), fontFamily: "inherit", resize: "none" }}
           />
-          {errors.description && <p style={errorStyle}>⚠ {errors.description}</p>}
+          {errors.description && <p style={errorStyle}>{String.fromCharCode(9888)} {errors.description}</p>}
         </div>
 
         <div>
@@ -150,52 +144,50 @@ export default function CreateBountyForm({ onSuccess, onCancel }: Props) {
           <div style={{ position: "relative" }}>
             <input
               type="number" min="0.0000001" step="any" placeholder="e.g. 100"
-              value={form.amount} onChange={set("amount")}
+              value={form.amount} onChange={setField("amount")}
               style={{ ...inputStyle(!!errors.amount), paddingRight: 52 }}
             />
             <span style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", fontSize: 12, fontWeight: 700, color: "#444440", letterSpacing: "0.05em" }}>
               XLM
             </span>
           </div>
-          {errors.amount && <p style={errorStyle}>⚠ {errors.amount}</p>}
+          {errors.amount && <p style={errorStyle}>{String.fromCharCode(9888)} {errors.amount}</p>}
         </div>
 
         <div>
-          <label style={labelStyle}>Freelancer Address</label>
-          <input
-            type="text" placeholder="G... (56 character Stellar address)"
-            value={form.freelancer} onChange={set("freelancer")}
-            style={inputStyle(!!errors.freelancer)}
-          />
-          {errors.freelancer
-            ? <p style={errorStyle}>⚠ {errors.freelancer}</p>
-            : form.freelancer && isValidStellarAddress(form.freelancer)
-              ? <p style={{ fontSize: 12, color: "#c9ee00", marginTop: 4 }}>✓ Valid address</p>
-              : null
-          }
-        </div>
-
-        <div>
-          <label style={labelStyle}>Arbiter Address</label>
-          <input
-            type="text" placeholder="G... (neutral third party for disputes)"
-            value={form.arbiter} onChange={set("arbiter")}
-            style={inputStyle(!!errors.arbiter)}
-          />
-          {errors.arbiter
-            ? <p style={errorStyle}>⚠ {errors.arbiter}</p>
-            : form.arbiter && isValidStellarAddress(form.arbiter)
-              ? <p style={{ fontSize: 12, color: "#c9ee00", marginTop: 4 }}>✓ Valid address</p>
-              : null
-          }
-          <p style={{ fontSize: 11, color: "#444440", marginTop: 6 }}>
-            A trusted person both parties agree on — settles disputes if client and freelancer disagree.
+          <label style={labelStyle}>Trusted Arbiter</label>
+          <select
+            value={form.arbiter}
+            onChange={setField("arbiter")}
+            style={{
+              ...inputStyle(!!errors.arbiter),
+              appearance: "none" as React.CSSProperties["appearance"],
+              backgroundRepeat: "no-repeat",
+              backgroundPosition: "right 14px center",
+              paddingRight: 36,
+              cursor: "pointer",
+            }}
+          >
+            {TRUSTED_ARBITERS.map(a => (
+              <option key={a.address} value={a.address} style={{ backgroundColor: "#0a0a0a" }}>
+                {a.label}
+              </option>
+            ))}
+          </select>
+          {errors.arbiter && <p style={errorStyle}>{String.fromCharCode(9888)} {errors.arbiter}</p>}
+          {selectedArbiter && (
+            <p style={{ fontSize: 11, color: "#444440", marginTop: 6, fontFamily: "monospace" }}>
+              {selectedArbiter.address.slice(0, 8)}...{selectedArbiter.address.slice(-6)}
+            </p>
+          )}
+          <p style={{ fontSize: 11, color: "#444440", marginTop: 4 }}>
+            A neutral third party that resolves disputes between you and the freelancer.
           </p>
         </div>
 
         <div style={{ paddingTop: 8, borderTop: "1px solid #222220", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
           <p style={{ fontSize: 12, color: "#444440", margin: 0 }}>
-            Posting as <span style={{ fontFamily: "monospace" }}>{address.slice(0, 6)}…{address.slice(-4)}</span>
+            Posting as <span style={{ fontFamily: "monospace" }}>{address.slice(0, 6)}...{address.slice(-4)}</span>
           </p>
           <div style={{ display: "flex", gap: 8 }}>
             {onCancel && (
@@ -223,7 +215,7 @@ export default function CreateBountyForm({ onSuccess, onCancel }: Props) {
                 opacity: submitting ? 0.7 : 1,
               }}
             >
-              {submitting ? "Creating…" : "Create Bounty"}
+              {submitting ? "Creating..." : "Create Bounty"}
             </button>
           </div>
         </div>

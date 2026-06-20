@@ -1,4 +1,4 @@
-import * as StellarSdk from "@stellar/stellar-sdk";
+﻿import * as StellarSdk from "@stellar/stellar-sdk";
 import { CONTRACT_ID, NETWORK_PASSPHRASE, signTx } from "./stellar";
 import type { Bounty, BountyStatus, DisputeOutcome } from "@/types/bounty";
 
@@ -57,6 +57,7 @@ function scValToBounty(id: number, val: StellarSdk.xdr.ScVal): Bounty {
     amount,
     description: lookup.get("description")!.str().toString(),
     status: scValToStatus(lookup.get("status")!),
+    workProof: lookup.get("work_proof")?.str().toString() ?? "",
   };
 }
 
@@ -166,8 +167,11 @@ export async function fundBounty(source: string, id: number): Promise<void> {
   await buildAndSubmit(source, "fund", [StellarSdk.nativeToScVal(id, { type: "u64" })]);
 }
 
-export async function submitWork(source: string, id: number): Promise<void> {
-  await buildAndSubmit(source, "submit_work", [StellarSdk.nativeToScVal(id, { type: "u64" })]);
+export async function submitWork(source: string, id: number, workProof: string): Promise<void> {
+  await buildAndSubmit(source, "submit_work", [
+    StellarSdk.nativeToScVal(id, { type: "u64" }),
+    StellarSdk.nativeToScVal(workProof, { type: "string" }),
+  ]);
 }
 
 export async function approveBounty(source: string, id: number): Promise<void> {
@@ -197,4 +201,39 @@ export async function resolveDispute(
 
 export async function cancelBounty(source: string, id: number): Promise<void> {
   await buildAndSubmit(source, "cancel", [StellarSdk.nativeToScVal(id, { type: "u64" })]);
+}
+export async function applyToBounty(source: string, id: number): Promise<void> {
+  await buildAndSubmit(source, "apply", [
+    StellarSdk.nativeToScVal(id, { type: "u64" }),
+    StellarSdk.Address.fromString(source).toScVal(),
+  ]);
+}
+
+export async function acceptApplicant(source: string, id: number, applicant: string): Promise<void> {
+  await buildAndSubmit(source, "accept_applicant", [
+    StellarSdk.nativeToScVal(id, { type: "u64" }),
+    StellarSdk.Address.fromString(applicant).toScVal(),
+  ]);
+}
+
+export async function getApplicants(id: number): Promise<string[]> {
+  try {
+    const server = getServer();
+    const contract = getContract();
+    const tx = new StellarSdk.TransactionBuilder(getDummyAccount(), {
+      fee: "100",
+      networkPassphrase: NETWORK_PASSPHRASE,
+    })
+      .addOperation(contract.call("get_applicants", StellarSdk.nativeToScVal(id, { type: "u64" })))
+      .setTimeout(30)
+      .build();
+    const result = await server.simulateTransaction(tx);
+    if ("error" in result) return [];
+    const retval = (result as StellarSdk.rpc.Api.SimulateTransactionSuccessResponse).result?.retval;
+    if (!retval) return [];
+    const vec = retval.vec() ?? [];
+    return vec.map((v) => StellarSdk.Address.fromScVal(v).toString());
+  } catch {
+    return [];
+  }
 }

@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import type { Bounty } from "@/types/bounty";
-import { getBounty } from "@/lib/contract";
+import { getBounty, getApplicants, acceptApplicant } from "@/lib/contract";
 import { stroopsToXlm, getBountyEvents, type ContractEvent } from "@/lib/stellar";
 import { useWallet } from "@/context/WalletContext";
 import { useToast } from "@/context/ToastContext";
@@ -12,7 +12,7 @@ import ActionButtons from "@/components/ActionButtons";
 import SkeletonCard from "@/components/SkeletonCard";
 
 function truncate(addr: string) {
-  return `${addr.slice(0, 8)}…${addr.slice(-6)}`;
+  return `${addr.slice(0, 8)}...${addr.slice(-6)}`;
 }
 
 interface Props {
@@ -22,12 +22,14 @@ interface Props {
 
 export default function BountyDetailContent({ id, onClose }: Props) {
   const { address } = useWallet();
-  const { showToast } = useToast();
+  const { showToast, dismissToast } = useToast();
   const [bounty, setBounty] = useState<Bounty | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [events, setEvents] = useState<ContractEvent[]>([]);
+  const [applicants, setApplicants] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
+  const [acceptingAddr, setAcceptingAddr] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     const b = await getBounty(id);
@@ -36,6 +38,8 @@ export default function BountyDetailContent({ id, onClose }: Props) {
     setLoading(false);
     const evts = await getBountyEvents(id);
     setEvents(evts);
+    const apps = await getApplicants(id);
+    setApplicants(apps);
   }, [id]);
 
   useEffect(() => { refresh(); }, [refresh]);
@@ -47,6 +51,23 @@ export default function BountyDetailContent({ id, onClose }: Props) {
       showToast("Link copied to clipboard!", "success", 2500);
       setTimeout(() => setCopied(false), 2500);
     });
+  }
+
+  async function handleAccept(applicant: string) {
+    if (!address || !bounty) return;
+    setAcceptingAddr(applicant);
+    const toastId = showToast("Accepting applicant... Waiting for Freighter.", "loading");
+    try {
+      await acceptApplicant(address, bounty.id, applicant);
+      dismissToast(toastId);
+      showToast("Freelancer accepted! They can now submit work.", "success");
+      refresh();
+    } catch (e) {
+      dismissToast(toastId);
+      showToast(e instanceof Error ? e.message : "Failed to accept applicant", "error");
+    } finally {
+      setAcceptingAddr(null);
+    }
   }
 
   if (loading) {
@@ -73,11 +94,11 @@ export default function BountyDetailContent({ id, onClose }: Props) {
             onClick={onClose}
             style={{ color: "#c9ee00", background: "none", border: "none", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
           >
-            ← Close
+            Back
           </button>
         ) : (
           <Link href="/" style={{ color: "#c9ee00", textDecoration: "none", fontSize: 14, fontWeight: 600 }}>
-            ← Back to board
+            Back to board
           </Link>
         )}
       </div>
@@ -99,10 +120,12 @@ export default function BountyDetailContent({ id, onClose }: Props) {
     create_bounty:   "Bounty created",
     fund:            "Escrow funded",
     submit_work:     "Work submitted",
-    approve:         "Work approved — funds released",
+    approve:         "Work approved -- funds released",
     dispute:         "Dispute raised",
     resolve_dispute: "Dispute resolved",
     cancel:          "Bounty cancelled",
+    apply:           "Applicant applied",
+    accept_applicant:"Freelancer accepted",
   };
 
   const statusDotColor: Record<string, string> = {
@@ -113,7 +136,13 @@ export default function BountyDetailContent({ id, onClose }: Props) {
     dispute:         "#e53a0d",
     resolve_dispute: "#e03a7a",
     cancel:          "#444440",
+    apply:           "#888880",
+    accept_applicant:"#c9ee00",
   };
+
+  const isClient = address === bounty.client;
+  const freelancerAccepted = applicants.includes(bounty.freelancer);
+  const canAccept = isClient && !freelancerAccepted && (bounty.status === "Open" || bounty.status === "Funded");
 
   return (
     <div style={{ padding: "32px 24px" }}>
@@ -124,11 +153,11 @@ export default function BountyDetailContent({ id, onClose }: Props) {
             onClick={onClose}
             style={{ fontSize: 14, fontWeight: 600, color: "#888880", background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "inherit" }}
           >
-            ← Back
+            Back
           </button>
         ) : (
           <Link href="/" style={{ fontSize: 14, fontWeight: 600, color: "#888880", textDecoration: "none" }}>
-            ← Back to board
+            Back to board
           </Link>
         )}
         <button
@@ -142,7 +171,7 @@ export default function BountyDetailContent({ id, onClose }: Props) {
             marginRight: onClose ? 40 : 0,
           }}
         >
-          {copied ? "✓ Copied!" : "Share"}
+          {copied ? "Copied!" : "Share"}
         </button>
       </div>
 
@@ -167,12 +196,81 @@ export default function BountyDetailContent({ id, onClose }: Props) {
           {infoRow("Arbiter", truncate(bounty.arbiter))}
           {infoRow("Token", truncate(bounty.token))}
         </div>
+
+        {bounty.workProof && (
+          <div style={{ marginTop: 16, padding: "12px 14px", backgroundColor: "#1a1a18", borderRadius: 8, border: "1px solid #2a2a28" }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: "#444440", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 6px 0" }}>
+              Work Proof
+            </p>
+            {bounty.workProof.startsWith("http") ? (
+              <a href={bounty.workProof} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: "#818cf8", wordBreak: "break-all" }}>
+                {bounty.workProof}
+              </a>
+            ) : (
+              <p style={{ fontSize: 13, color: "#888880", margin: 0, wordBreak: "break-all" }}>{bounty.workProof}</p>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* Applicants panel -- visible to client when there are applicants */}
+      {applicants.length > 0 && (
+        <div style={{ backgroundColor: "#141414", borderRadius: 8, border: "1px solid #222220", padding: 24, marginBottom: 12 }}>
+          <h2 style={{ fontSize: 13, fontWeight: 700, color: "#444440", margin: "0 0 16px 0", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+            Applicants ({applicants.length})
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {applicants.map((addr) => {
+              const isAccepted = addr === bounty.freelancer;
+              const someoneAccepted = freelancerAccepted;
+              return (
+                <div
+                  key={addr}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    gap: 12, padding: "10px 14px", borderRadius: 6,
+                    backgroundColor: isAccepted ? "#0e1607" : "#0a0a0a",
+                    border: `1px solid ${isAccepted ? "#c9ee00" : "#222220"}`,
+                    opacity: someoneAccepted && !isAccepted ? 0.4 : 1,
+                  }}
+                >
+                  <span style={{ fontSize: 13, fontFamily: "monospace", color: isAccepted ? "#c9ee00" : "#888880", wordBreak: "break-all" }}>
+                    {addr}
+                  </span>
+                  {isAccepted ? (
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "#c9ee00", letterSpacing: "0.05em", flexShrink: 0 }}>
+                      ACCEPTED
+                    </span>
+                  ) : canAccept && (
+                    <button
+                      disabled={!!acceptingAddr}
+                      onClick={() => handleAccept(addr)}
+                      style={{
+                        padding: "6px 14px", borderRadius: 6, border: "none", flexShrink: 0,
+                        backgroundColor: acceptingAddr === addr ? "#a8c700" : "#c9ee00",
+                        color: "#0a0a0a", fontWeight: 700, fontSize: 13,
+                        cursor: acceptingAddr ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      {acceptingAddr === addr ? "Accepting..." : "Accept"}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {!isClient && (
+            <p style={{ fontSize: 12, color: "#444440", marginTop: 12, marginBottom: 0 }}>
+              Only the client can accept an applicant.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Flow hint */}
       <div style={{ backgroundColor: "#141414", borderRadius: 8, border: "1px solid #222220", padding: "12px 16px", marginBottom: 12, fontSize: 12, color: "#444440" }}>
         <span style={{ fontWeight: 700, color: "#666660" }}>Flow: </span>
-        Open → Funded → Submitted → Approved &nbsp;|&nbsp; Disputed → Resolved
+        Open / Funded (apply) -- Client accepts -- Freelancer submits -- Approved | Disputed -- Resolved
       </div>
 
       {/* Actions */}
@@ -220,7 +318,7 @@ export default function BountyDetailContent({ id, onClose }: Props) {
                       rel="noopener noreferrer"
                       style={{ fontSize: 11, color: "#3535d5", fontFamily: "monospace" }}
                     >
-                      {evt.txHash.slice(0, 12)}…
+                      {evt.txHash.slice(0, 12)}...
                     </a>
                   </div>
                 </div>

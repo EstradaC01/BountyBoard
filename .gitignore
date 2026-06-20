@@ -1,0 +1,16 @@
+# Rust build output
+target/
+Cargo.lock
+
+# Soroban test snapshots (generated, not source)
+contracts/**/test_snapshots/
+
+# Node / Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/.env*.local
+frontend/tsconfig.tsbuildinfo
+
+# OS
+.DS_Store
+Thumbs.db

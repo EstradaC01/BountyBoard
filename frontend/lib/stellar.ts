@@ -1,4 +1,4 @@
-import {
+﻿import {
   isConnected,
   requestAccess,
   getAddress,
@@ -26,7 +26,7 @@ export async function getXlmBalance(address: string): Promise<string | null> {
 
 export const NETWORK = "TESTNET";
 export const NETWORK_PASSPHRASE = "Test SDF Network ; September 2015";
-export const CONTRACT_ID = "CBPSPVYP2U6N6PWU55IRHMYUP3PRKTNIUQRU2BLF37TVFABLEFHRTQ47";
+export const CONTRACT_ID = "CCZLJTXJTQ2SL2VYAVZOO47IT7JH6XLGKKO72RV6OPCC6SEYEQUDDAD3";
 export const STROOPS_PER_XLM = 10_000_000n;
 
 export function stroopsToXlm(stroops: bigint): string {

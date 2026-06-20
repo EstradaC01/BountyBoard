@@ -16,6 +16,7 @@ export interface Bounty {
   amount: bigint;
   description: string;
   status: BountyStatus;
+  workProof: string;
 }
 
 export type DisputeOutcome = "PayFreelancer" | "RefundClient";

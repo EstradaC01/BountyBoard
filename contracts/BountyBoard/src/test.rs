@@ -1,4 +1,4 @@
-#![cfg(test)]
+﻿#![cfg(test)]
 
 use super::*;
 use soroban_sdk::{
@@ -7,7 +7,6 @@ use soroban_sdk::{
     Address, Env, String,
 };
 
-/// Shared test fixture. Not a `#[test]`, so the file keeps exactly 5 tests.
 struct Setup<'a> {
     env: Env,
     client: Address,
@@ -29,7 +28,6 @@ fn setup<'a>() -> Setup<'a> {
     let freelancer = Address::generate(&env);
     let arbiter = Address::generate(&env);
 
-    // Register a Stellar Asset Contract (stand-in for native XLM) and mint to the client.
     let sac = env.register_stellar_asset_contract_v2(client.clone());
     let token = sac.address();
     StellarAssetClient::new(&env, &token).mint(&client, &STARTING_BALANCE);
@@ -37,15 +35,7 @@ fn setup<'a>() -> Setup<'a> {
 
     let contract = ContractClient::new(&env, &env.register(Contract, ()));
 
-    Setup {
-        env,
-        client,
-        freelancer,
-        arbiter,
-        token,
-        token_client,
-        contract,
-    }
+    Setup { env, client, freelancer, arbiter, token, token_client, contract }
 }
 
 impl<'a> Setup<'a> {
@@ -61,7 +51,7 @@ impl<'a> Setup<'a> {
     }
 }
 
-/// Test 1 — Happy path: create -> fund -> submit -> approve releases funds to freelancer.
+/// Test 1 -- Happy path: create -> fund -> submit -> approve releases funds to freelancer.
 #[test]
 fn happy_path() {
     let s = setup();
@@ -71,45 +61,46 @@ fn happy_path() {
     assert_eq!(s.token_client.balance(&s.contract.address), AMOUNT);
     assert_eq!(s.token_client.balance(&s.client), STARTING_BALANCE - AMOUNT);
 
-    s.contract.submit_work(&id);
+    s.contract.submit_work(&id, &String::from_str(&s.env, "https://example.com/my-work"));
     s.contract.approve(&id);
 
     assert_eq!(s.token_client.balance(&s.freelancer), AMOUNT);
     assert_eq!(s.token_client.balance(&s.contract.address), 0);
 }
 
-/// Test 2 — Edge case: submitting work before the bounty is funded is rejected.
+/// Test 2 -- Edge case: submitting work before the bounty is funded is rejected.
 #[test]
 fn submit_before_funding_fails() {
     let s = setup();
     let id = s.create();
 
-    let result = s.contract.try_submit_work(&id);
+    let result = s.contract.try_submit_work(&id, &String::from_str(&s.env, "https://example.com/work"));
     assert_eq!(result, Err(Ok(Error::InvalidStatus)));
 }
 
-/// Test 3 — State verification: storage reflects the correct state mid-lifecycle.
+/// Test 3 -- State verification: storage reflects the correct state mid-lifecycle.
 #[test]
 fn state_after_submit() {
     let s = setup();
     let id = s.create();
     s.contract.fund(&id);
-    s.contract.submit_work(&id);
+    s.contract.submit_work(&id, &String::from_str(&s.env, "https://example.com/my-work"));
 
     let bounty = s.contract.get_bounty(&id);
     assert_eq!(bounty.status, Status::Submitted);
     assert_eq!(bounty.amount, AMOUNT);
     assert_eq!(bounty.freelancer, s.freelancer);
     assert_eq!(bounty.client, s.client);
+    assert_eq!(bounty.work_proof, String::from_str(&s.env, "https://example.com/my-work"));
 }
 
-/// Test 4 — Dispute resolved in favor of the freelancer pays them out.
+/// Test 4 -- Dispute resolved in favor of the freelancer pays them out.
 #[test]
 fn dispute_pays_freelancer() {
     let s = setup();
     let id = s.create();
     s.contract.fund(&id);
-    s.contract.submit_work(&id);
+    s.contract.submit_work(&id, &String::from_str(&s.env, "https://example.com/my-work"));
 
     s.contract.dispute(&id, &s.client);
     s.contract.resolve_dispute(&id, &true);
@@ -119,7 +110,7 @@ fn dispute_pays_freelancer() {
     assert_eq!(s.contract.get_bounty(&id).status, Status::Resolved);
 }
 
-/// Test 5 — Dispute resolved against the freelancer refunds the client.
+/// Test 5 -- Dispute resolved against the freelancer refunds the client.
 #[test]
 fn dispute_refunds_client() {
     let s = setup();
@@ -132,4 +123,45 @@ fn dispute_refunds_client() {
     assert_eq!(s.token_client.balance(&s.client), STARTING_BALANCE);
     assert_eq!(s.token_client.balance(&s.contract.address), 0);
     assert_eq!(s.contract.get_bounty(&id).status, Status::Resolved);
+}
+
+/// Test 6 -- apply() adds applicant; accept_applicant() sets freelancer; submit_work() succeeds.
+#[test]
+fn apply_and_accept() {
+    let s = setup();
+    let applicant = Address::generate(&s.env);
+
+    // Create with a dummy placeholder freelancer (not the real one yet)
+    let id = s.create();
+    s.contract.fund(&id);
+
+    // Applicant applies
+    s.contract.apply(&id, &applicant);
+    let applicants = s.contract.get_applicants(&id);
+    assert_eq!(applicants.len(), 1);
+    assert_eq!(applicants.get(0).unwrap(), applicant);
+
+    // Duplicate application is rejected
+    let dup = s.contract.try_apply(&id, &applicant);
+    assert_eq!(dup, Err(Ok(Error::AlreadyApplied)));
+
+    // Client accepts the applicant
+    s.contract.accept_applicant(&id, &applicant);
+    assert_eq!(s.contract.get_bounty(&id).freelancer, applicant);
+
+    // Accepted freelancer can now submit work
+    s.contract.submit_work(&id, &String::from_str(&s.env, "https://example.com/work"));
+    s.contract.approve(&id);
+    assert_eq!(s.token_client.balance(&applicant), AMOUNT);
+}
+
+/// Test 7 -- accept_applicant() rejects someone who never applied.
+#[test]
+fn accept_non_applicant_fails() {
+    let s = setup();
+    let id = s.create();
+    let stranger = Address::generate(&s.env);
+
+    let result = s.contract.try_accept_applicant(&id, &stranger);
+    assert_eq!(result, Err(Ok(Error::ApplicantNotFound)));
 }

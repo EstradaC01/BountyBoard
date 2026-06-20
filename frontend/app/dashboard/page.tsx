@@ -78,16 +78,16 @@ export default function DashboardPage() {
   const pendingActions = !loading ? getPendingActions(bounties, address) : [];
 
   return (
-    <div style={{ maxWidth: 1152, margin: "0 auto", padding: "32px 24px" }}>
-      <p style={{ fontSize: 10, fontWeight: 700, color: "#e03a7a", textTransform: "uppercase", letterSpacing: "0.16em", margin: "0 0 6px 0" }}>
-        Connected Wallet
-      </p>
-      <h1 style={{ fontSize: 24, fontWeight: 800, color: "#ebebdf", margin: "0 0 4px 0", letterSpacing: "-0.04em" }}>
-        My Bounties
+    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "48px 24px 32px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+        <span style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: "#c9ee00" }} />
+        <span style={{ fontSize: 11, fontWeight: 700, color: "#9a9a92", textTransform: "uppercase", letterSpacing: "0.18em" }}>
+          Connected · <span style={{ fontFamily: "monospace", letterSpacing: 0 }}>{address.slice(0, 6)}…{address.slice(-4)}</span>
+        </span>
+      </div>
+      <h1 style={{ fontSize: 34, fontWeight: 800, color: "#ebebdf", margin: "0 0 28px 0", letterSpacing: "-0.035em", lineHeight: 1.05 }}>
+        My bounties
       </h1>
-      <p style={{ fontSize: 13, color: "#444440", margin: "0 0 24px 0" }}>
-        <span style={{ fontFamily: "monospace", color: "#666660" }}>{address.slice(0, 6)}…{address.slice(-4)}</span>
-      </p>
 
       {/* Pending actions banner */}
       {pendingActions.length > 0 && (

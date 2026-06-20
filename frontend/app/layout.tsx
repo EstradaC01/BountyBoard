@@ -30,22 +30,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AppShell>{children}</AppShell>
 
         <style>{`
-          .desktop-nav { display: flex; gap: 4px; align-items: center; }
-          .desktop-wallet { display: block; }
-          .mobile-menu { display: none; }
+          .header-actions { display: flex; align-items: center; gap: 8px; }
+          .header-mobile { display: none; }
 
-          .nav-link:hover { color: #ebebdf !important; background-color: #1a1a18 !important; }
+          .nav-link:hover { color: #ebebdf !important; background-color: #181815 !important; }
+          .filter-pill:hover { border-color: #3a3a36 !important; color: #ebebdf !important; }
 
           * { box-sizing: border-box; }
-          ::selection { background: #e03a7a33; color: #ebebdf; }
-          :focus-visible { outline: 2px solid #e03a7a; outline-offset: 2px; }
-          input:focus, select:focus { border-color: #e03a7a !important; outline: none; }
-          input::placeholder { color: #444440; }
+          ::selection { background: #c9ee0033; color: #ebebdf; }
+          :focus-visible { outline: 2px solid #c9ee00; outline-offset: 2px; }
+          input:focus, select:focus { border-color: #c9ee00 !important; outline: none; }
+          input::placeholder { color: #555550; }
 
-          @media (max-width: 640px) {
-            .desktop-nav { display: none; }
-            .desktop-wallet { display: none; }
-            .mobile-menu { display: block; }
+          @media (max-width: 720px) {
+            .header-actions { display: none; }
+            .header-mobile { display: block; }
           }
         `}</style>
       </body>

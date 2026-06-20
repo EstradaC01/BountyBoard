@@ -22,57 +22,36 @@ type P = {
   rotate: number; opacity: number; float: boolean;
 };
 
-// Distributed across full viewport — top, middle, and bottom
+// Visible graphic system across the page — larger/bolder shapes weighted to the
+// edges so the content column stays readable, with a few quieter interior marks.
 const PLACEMENTS: P[] = [
-  // ── TOP CORNERS (bleed off-screen) ──
-  { type:"cloud",    fill:"#c9ee00", size:300, top:"-10%", left:"-8%",   rotate:-12, opacity:.12, float:true  },
-  { type:"star4",    fill:"#3535d5", size:320, top:"-12%", right:"-8%",  rotate: 20, opacity:.13, float:true  },
+  // ── Corners (bleed off-screen) ──
+  { type:"cloud", fill:"#c9ee00", size:320, top:"-12%", left:"-9%",  rotate:-12, opacity:.10, float:true  },
+  { type:"star4", fill:"#3535d5", size:340, top:"-14%", right:"-9%", rotate: 18, opacity:.11, float:true  },
+  { type:"arrow", fill:"#c9ee00", size:300, top:"72%",  left:"-8%",  rotate:130, opacity:.09, float:true  },
+  { type:"cloud", fill:"#e03a7a", size:280, top:"70%",  right:"-8%", rotate: 10, opacity:.10, float:true  },
 
-  // ── UPPER BAND (5–22%) — more color, higher opacity now that page bg is gone ──
-  { type:"star8",    fill:"#ebebdf", size: 68, top:"9%",   left:"17%",   rotate:  0, opacity:.07, float:false },
-  { type:"dots",     fill:"#c9ee00", size: 80, top:"8%",   right:"17%",  rotate:  0, opacity:.08, float:false },
-  { type:"cross",    fill:"#e03a7a", size: 72, top:"14%",  left:"53%",   rotate: 45, opacity:.07, float:false },
-  { type:"arrow",    fill:"#e53a0d", size:115, top:"3%",   left:"40%",   rotate: 42, opacity:.09, float:true  },
-  { type:"squircle", fill:"#e03a7a", size:105, top:"18%",  right:"5%",   rotate:  8, opacity:.09, float:false },
-  { type:"pill",     fill:"#c9ee00", size: 90, top:"14%",  left:"71%",   rotate: 25, opacity:.08, float:true  },
-  // new: edge accents at upper level
-  { type:"pill",     fill:"#e53a0d", size:120, top:"9%",   left:"3%",    rotate:-38, opacity:.09, float:true  },
-  { type:"squircle", fill:"#3535d5", size:145, top:"16%",  right:"3%",   rotate:  5, opacity:.09, float:false },
+  // ── Left & right edge band ──
+  { type:"star8", fill:"#e03a7a", size:160, top:"22%", left:"-4%",  rotate: -6, opacity:.08, float:true  },
+  { type:"pie",   fill:"#3535d5", size:220, top:"42%", left:"-6%",  rotate: 10, opacity:.09, float:true  },
+  { type:"cross", fill:"#e53a0d", size:170, top:"31%", right:"-4%", rotate: 18, opacity:.08, float:false },
+  { type:"star4", fill:"#c9ee00", size:160, top:"54%", right:"-5%", rotate: 26, opacity:.09, float:false },
+  { type:"cross", fill:"#3535d5", size:130, top:"82%", right:"-3%", rotate:-15, opacity:.07, float:false },
+  { type:"pill",  fill:"#e53a0d", size:120, top:"60%", left:"-3%",  rotate:-30, opacity:.07, float:true  },
 
-  // ── UPPER–MIDDLE BAND (22–45%) — the main content zone ──
-  { type:"cross",    fill:"#e53a0d", size:210, top:"24%",  left:"-6%",   rotate: 18, opacity:.12, float:false },
-  { type:"pie",      fill:"#3535d5", size:260, top:"28%",  right:"-7%",  rotate: 10, opacity:.13, float:true  },
-  { type:"star8",    fill:"#e03a7a", size:230, top:"20%",  left:"-5%",   rotate: -6, opacity:.12, float:true  },
-  { type:"star4",    fill:"#c9ee00", size:190, top:"38%",  right:"-5%",  rotate: 30, opacity:.12, float:false },
-  { type:"pill",     fill:"#ebebdf", size: 82, top:"40%",  left:"8%",    rotate:-28, opacity:.06, float:true  },
-  { type:"slash",    fill:"#c9ee00", size: 80, top:"24%",  right:"14%",  rotate: -5, opacity:.07, float:false },
-  { type:"star8",    fill:"#e03a7a", size:170, top:"22%",  left:"44%",   rotate: -6, opacity:.08, float:true  },
-  { type:"arrow",    fill:"#3535d5", size:105, top:"33%",  left:"63%",   rotate:-20, opacity:.07, float:false },
-  { type:"star4",    fill:"#ebebdf", size: 64, top:"37%",  left:"28%",   rotate: 30, opacity:.05, float:false },
-  { type:"cloud",    fill:"#e53a0d", size:145, top:"42%",  left:"44%",   rotate: -8, opacity:.07, float:true  },
+  // ── Upper texture (above the fold, around the toolbar) ──
+  { type:"dots",  fill:"#ebebdf", size: 84, top:"13%", left:"7%",   rotate:  0, opacity:.05, float:false },
+  { type:"dots",  fill:"#c9ee00", size: 84, top:"14%", right:"6%",  rotate:  0, opacity:.06, float:false },
+  { type:"star8", fill:"#ebebdf", size: 60, top:"9%",  left:"46%",  rotate:  0, opacity:.04, float:false },
 
-  // ── MID BAND (45–62%) ──
-  { type:"star4",    fill:"#c9ee00", size:165, top:"50%",  left:"3%",    rotate: 15, opacity:.10, float:true  },
-  { type:"squircle", fill:"#ebebdf", size: 76, top:"50%",  left:"61%",   rotate: 12, opacity:.05, float:false },
-  { type:"dots",     fill:"#c9ee00", size: 80, top:"57%",  right:"22%",  rotate:  0, opacity:.07, float:false },
-  { type:"slash",    fill:"#3535d5", size: 72, top:"54%",  left:"22%",   rotate:-10, opacity:.07, float:false },
-  { type:"cross",    fill:"#c9ee00", size:175, top:"44%",  right:"-4%",  rotate: 22, opacity:.11, float:false },
-  { type:"star4",    fill:"#e03a7a", size: 90, top:"44%",  right:"35%",  rotate: 18, opacity:.06, float:false },
-
-  // ── LOWER–MIDDLE BAND (62–75%) ──
-  { type:"pill",     fill:"#e03a7a", size: 92, top:"62%",  left:"51%",   rotate: 55, opacity:.07, float:false },
-  { type:"half",     fill:"#ebebdf", size: 90, top:"67%",  right:"34%",  rotate:180, opacity:.05, float:true  },
-  { type:"dots",     fill:"#3535d5", size: 76, top:"70%",  right:"18%",  rotate:  0, opacity:.07, float:false },
-
-  // ── BOTTOM CORNERS (bleed off-screen) ──
-  { type:"arrow",    fill:"#c9ee00", size:280, top:"68%",  left:"-6%",   rotate:130, opacity:.12, float:true  },
-  { type:"cloud",    fill:"#e03a7a", size:260, top:"66%",  right:"-6%",  rotate: 10, opacity:.13, float:true  },
-
-  // ── BOTTOM FILL (75–90%) ──
-  { type:"star8",    fill:"#e53a0d", size:200, top:"76%",  left:"40%",   rotate: 14, opacity:.10, float:false },
-  { type:"star8",    fill:"#ebebdf", size: 72, top:"80%",  left:"15%",   rotate: 24, opacity:.06, float:false },
-  { type:"cross",    fill:"#3535d5", size:120, top:"82%",  right:"11%",  rotate:-15, opacity:.09, float:false },
-  { type:"pill",     fill:"#c9ee00", size:100, top:"87%",  left:"55%",   rotate: 20, opacity:.07, float:false },
+  // ── Interior marks for depth (kept faint behind cards) ──
+  { type:"squircle", fill:"#3535d5", size: 90, top:"50%", right:"8%",  rotate:  8, opacity:.05, float:false },
+  { type:"star8",    fill:"#e53a0d", size:190, top:"83%", left:"42%",  rotate: 14, opacity:.06, float:false },
+  { type:"pill",     fill:"#e03a7a", size:100, top:"88%", left:"58%",  rotate: 20, opacity:.06, float:false },
+  { type:"slash",    fill:"#c9ee00", size: 70, top:"55%", left:"28%",  rotate:-10, opacity:.04, float:false },
+  { type:"dots",     fill:"#e03a7a", size: 72, top:"72%", right:"22%", rotate:  0, opacity:.05, float:false },
+  { type:"half",     fill:"#ebebdf", size: 88, top:"67%", right:"34%", rotate:180, opacity:.04, float:true  },
+  { type:"star4",    fill:"#ebebdf", size: 66, top:"40%", left:"40%",  rotate: 30, opacity:.035,float:false },
 ];
 
 export default function BackgroundShapes() {
